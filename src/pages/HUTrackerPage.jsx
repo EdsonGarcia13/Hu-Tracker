@@ -99,37 +99,39 @@ export default function HUTrackerPage() {
   }, [filtered, selectedSprint]);
 
   // build burndown dataset
-  
-const burndownDataFor = (rows) =>
-  rows.map((row) => {
-    const original = Number(row["Original Estimate"]) || 0;
-    const completed = Number(row["Completed Work"]) || 0;
-    const remaining = Math.max(0, original - completed);
 
-    const start = row["Start Date"] ? new Date(row["Start Date"]) : new Date();
-    const due = row["Due Date"] ? new Date(row["Due Date"]) : new Date();
-    const today = new Date();
+  const burndownDataFor = (rows) =>
+    rows.map((row) => {
+      const original = Number(row["Original Estimate"]) || 0;
+      const completed = Number(row["Completed Work"]) || 0;
+      const remaining = Math.max(0, original - completed);
 
-    const {
-      elapsedDays,
-      delayHours,
-      delayDays,
-      capacityHoursUntilDue,
-      capacityDaysUntilDue,
-    } = calculateElapsedAndDelay(start, due, today, original, completed);
+      const start = row["Start Date"]
+        ? new Date(row["Start Date"])
+        : new Date();
+      const due = row["Due Date"] ? new Date(row["Due Date"]) : new Date();
+      const today = new Date();
 
-    return {
-      Title: row.Title || "",
-      OriginalHours: original,
-      CompletedHours: completed,
-      RemainingHours: remaining,
-      DelayHours: delayHours,
-      DelayDays: delayDays,
-      CapacityHoursUntilDue: capacityHoursUntilDue,
-      CapacityDaysUntilDue: capacityDaysUntilDue,
-      Sprint: row.Sprint || "",
-    };
-  });
+      const {
+        elapsedDays,
+        delayHours,
+        delayDays,
+        capacityHoursUntilDue,
+        capacityDaysUntilDue,
+      } = calculateElapsedAndDelay(start, due, today, original, completed);
+
+      return {
+        Title: row.Title || "",
+        OriginalHours: original,
+        CompletedHours: completed,
+        RemainingHours: remaining,
+        DelayHours: delayHours,
+        DelayDays: delayDays,
+        CapacityHoursUntilDue: capacityHoursUntilDue,
+        CapacityDaysUntilDue: capacityDaysUntilDue,
+        Sprint: row.Sprint || "",
+      };
+    });
 
   const burndownData = useMemo(
     () => burndownDataFor(sprintFiltered),
@@ -169,9 +171,7 @@ const burndownDataFor = (rows) =>
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h2 className="m-0">
           📊 Historias de Usuario —{" "}
-          <span className="text-primary">
-            {selectedInitiative || "…"}
-          </span>
+          <span className="text-primary">{selectedInitiative || "…"}</span>
         </h2>
         <nav>
           <Link to="/initiatives" className="btn btn-outline-secondary">
