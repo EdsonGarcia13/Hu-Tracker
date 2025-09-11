@@ -1,0 +1,59 @@
+// src/mocks/initiativesMock.js
+export const initiativesMock = [
+  {
+    id: "ini-1",
+    name: "Ecommerce Platform",
+    startDate: "2025-09-01",
+    dueDate: "2025-09-15",
+    stories: [
+      {
+        id: "hu-1",
+        Title: "Carrito de compras",
+        State: "Done",
+        "Original Estimate": 12,
+        "Completed Work": 12,
+        "Remaining Work": 0,
+        "Start Date": "2025-09-01",
+        "Due Date": "2025-09-05",
+      },
+      {
+        id: "hu-2",
+        Title: "Checkout con PayPal",
+        State: "In Progress",
+        "Original Estimate": 16,
+        "Completed Work": 8,
+        "Remaining Work": 8,
+        "Start Date": "2025-09-02",
+        "Due Date": "2025-09-08",
+      },
+    ],
+  },
+  {
+    id: "ini-2",
+    name: "Analytics Dashboard",
+    startDate: "2025-09-05",
+    dueDate: "2025-09-20",
+    stories: [
+      {
+        id: "hu-3",
+        Title: "Reporte de ventas",
+        State: "ToDo",
+        "Original Estimate": 20,
+        "Completed Work": 0,
+        "Remaining Work": 20,
+        "Start Date": "2025-09-05",
+        "Due Date": "2025-09-15",
+      },
+      {
+        id: "hu-4",
+        Title: "Gráficas de usuarios",
+        State: "In Progress",
+        "Original Estimate": 15,
+        "Completed Work": 5,
+        "Remaining Work": 10,
+        "Start Date": "2025-09-07",
+        "Due Date": "2025-09-14",
+      },
+    ],
+  },
+];

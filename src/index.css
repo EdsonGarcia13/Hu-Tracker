@@ -1,0 +1,27 @@
+/* Colores del SELECT por estado (evita duplicados visuales) */
+.status-select--todo {
+  background-color: #e9ecef;   /* gris claro */
+  color: #212529;
+}
+.status-select--inprogress {
+  background-color: #ffe08a;   /* amarillo suave */
+  color: #3a3a3a;
+}
+.status-select--done {
+  background-color: #198754;   /* verde bootstrap */
+  color: #ffffff;
+}
+
+/* Para que el texto no se “desaparezca” en algunos navegadores */
+.status-select--todo:focus,
+.status-select--inprogress:focus,
+.status-select--done:focus {
+  color: inherit;
+}
+
+/* Opcional: quitar el “salto” visual del select en Safari/Edge */
+.status-select--todo,
+.status-select--inprogress,
+.status-select--done {
+  background-image: none;
+}
