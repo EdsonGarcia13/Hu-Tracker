@@ -1,3 +1,19 @@
+/* Global theme for a modern management look */
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #f5f7fa;
+  color: #212529;
+}
+
+.navbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 /* Colores del SELECT por estado (evita duplicados visuales) */
 .status-select--todo {
   background-color: #e9ecef;   /* gris claro */

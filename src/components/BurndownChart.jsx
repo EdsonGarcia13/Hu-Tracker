@@ -12,12 +12,12 @@ import {
 } from "recharts";
 
 export default function BurndownChart({ burndownData, initiative }) {
-  if (!burndownData || burndownData.length === 0) return null;
+  const data = useMemo(() => burndownData || [], [burndownData]);
 
   // Escala Y consistente para las barras (horas)
   const yMaxHours = useMemo(() => {
     let max = 0;
-    for (const d of burndownData) {
+    for (const d of data) {
       const stacked =
         (Number(d.CompletedHours) || 0) +
         (Number(d.RemainingHours) || 0) +
@@ -25,16 +25,18 @@ export default function BurndownChart({ burndownData, initiative }) {
       max = Math.max(max, stacked, Number(d.CapacityHoursUntilDue) || 0);
     }
     return Math.ceil(max * 1.1); // +10% de aire
-  }, [burndownData]);
+  }, [data]);
 
   // Escala Y para días
   const yMaxDays = useMemo(() => {
     let max = 0;
-    for (const d of burndownData) {
+    for (const d of data) {
       max = Math.max(max, Number(d.CapacityDaysUntilDue) || 0);
     }
     return Math.ceil(max * 1.1);
-  }, [burndownData]);
+  }, [data]);
+
+  if (data.length === 0) return null;
 
   return (
     <div className="card shadow-sm mt-4">
@@ -43,7 +45,7 @@ export default function BurndownChart({ burndownData, initiative }) {
           Avance por HU — {initiative || "General"}
         </h5>
         <ResponsiveContainer width="100%" height={420}>
-          <BarChart data={burndownData}>
+          <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Title" />
 
