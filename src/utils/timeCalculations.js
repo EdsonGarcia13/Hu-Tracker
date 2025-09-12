@@ -40,25 +40,34 @@ function calculateElapsedAndDelay(start, due, today, original, completed) {
   const dueDate = startOfDay(due);
   const todayDate = startOfDay(today);
 
-  // Días hábiles entre inicio y hoy
-  const daysElapsed = businessDaysBetween(startDate, todayDate);
+  // Días hábiles transcurridos desde el inicio (excluyendo el día de inicio)
+  const daysElapsed = Math.max(
+    0,
+    businessDaysBetween(startDate, todayDate) - 1
+  );
   const capacityHoursByNow = daysElapsed * WORK_HOURS_PER_DAY;
 
-  // Días hábiles entre inicio y due date
-  const daysUntilDue = businessDaysBetween(startDate, dueDate);
+  // Días hábiles planificados hasta la fecha de entrega
+  const daysUntilDue = Math.max(
+    0,
+    businessDaysBetween(startDate, dueDate) - 1
+  );
   const capacityHoursUntilDue = daysUntilDue * WORK_HOURS_PER_DAY;
 
   // Validar retraso (hoy después de due date y no completado)
   let delayHours = 0;
   if (completed < original && todayDate > dueDate) {
-    const overdueDays = businessDaysBetween(dueDate, todayDate);
+    const overdueDays = Math.max(
+      0,
+      businessDaysBetween(dueDate, todayDate) - 1
+    );
     delayHours = overdueDays * WORK_HOURS_PER_DAY;
   }
 
   const delayDays = +(delayHours / WORK_HOURS_PER_DAY).toFixed(1);
 
   return {
-    elapsedDays: +(capacityHoursByNow / WORK_HOURS_PER_DAY).toFixed(1),
+    elapsedDays: daysElapsed,
     elapsedEffectiveHours: Math.min(capacityHoursByNow, original),
     delayHours,
     delayDays,

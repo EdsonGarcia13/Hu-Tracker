@@ -1,12 +1,19 @@
 // src/App.jsx
 import React from "react";
 import { Outlet, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "./store/authSlice";
 
 export default function App() {
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
+
+  const handleLogout = () => dispatch(logout());
+
   return (
-    <div>
+    <div className="d-flex flex-column min-vh-100">
       {/* Navbar global */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">HU Tracker</Link>
           <div className="collapse navbar-collapse">
@@ -15,18 +22,28 @@ export default function App() {
                 <Link className="nav-link" to="/">Historias</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/initiatives-overview">Iniciativas</Link>
+                <Link className="nav-link" to="/initiatives">Iniciativas</Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/login">Login</Link>
-              </li>
+              {isAuthenticated ? (
+                <li className="nav-item">
+                  <button className="nav-link btn btn-link" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </li>
+              ) : (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/login">
+                    Login
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>
       </nav>
 
       {/* Aquí se renderizan las páginas */}
-      <main className="container py-4">
+      <main className="container py-4 flex-grow-1">
         <Outlet />
       </main>
     </div>

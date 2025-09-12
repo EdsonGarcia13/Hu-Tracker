@@ -9,6 +9,7 @@ import {
   setInitiatives,
 } from "../store/huSlice";
 import { initiativesMock } from "../mocks/initiativesMock";
+import { businessDaysBetween } from "../utils/timeCalculations";
 
 export default function InitiativesOverviewPage() {
   const dispatch = useDispatch();
@@ -33,26 +34,57 @@ export default function InitiativesOverviewPage() {
 
   const summary = useMemo(() => {
     return initiatives.map((ini) => {
+      const stories = ini.stories || [];
       const original =
-        ini.stories?.reduce((acc, hu) => acc + (hu["Original Estimate"] || 0), 0) || 0;
+        stories.reduce((acc, hu) => acc + (hu["Original Estimate"] || 0), 0) || 0;
       const completed =
-        ini.stories?.reduce((acc, hu) => acc + (hu["Completed Work"] || 0), 0) || 0;
+        stories.reduce((acc, hu) => acc + (hu["Completed Work"] || 0), 0) || 0;
       const remaining =
-        ini.stories?.reduce((acc, hu) => acc + (hu["Remaining Work"] || 0), 0) || 0;
+        stories.reduce((acc, hu) => acc + (hu["Remaining Work"] || 0), 0) || 0;
 
       const today = new Date();
-      const hasDelay = ini.stories?.some((hu) => {
+      const hasDelay = stories.some((hu) => {
         const huDue = new Date(hu["Due Date"]);
-        return (hu["Completed Work"] || 0) < (hu["Original Estimate"] || 0) && today > huDue;
+        return (
+          (hu["Completed Work"] || 0) < (hu["Original Estimate"] || 0) &&
+          today > huDue
+        );
       });
+
+      let projectedDelay = 0;
+      if (stories.length > 0) {
+        const start = stories.reduce((min, hu) => {
+          const d = hu["Start Date"] ? new Date(hu["Start Date"]) : today;
+          return d < min ? d : min;
+        }, stories[0]["Start Date"] ? new Date(stories[0]["Start Date"]) : today);
+        const due = stories.reduce((max, hu) => {
+          const d = hu["Due Date"] ? new Date(hu["Due Date"]) : today;
+          return d > max ? d : max;
+        }, stories[0]["Due Date"] ? new Date(stories[0]["Due Date"]) : today);
+
+        const totalDays = Math.max(
+          1,
+          businessDaysBetween(start, due) - 1
+        );
+        const daysElapsed = Math.max(
+          0,
+          businessDaysBetween(start, today) - 1
+        );
+        const burnRate = daysElapsed > 0 ? completed / daysElapsed : 0;
+        const rem = Math.max(original - completed, 0);
+        const projectedDays = burnRate > 0 ? Math.ceil(rem / burnRate) : 0;
+        const projectedTotal = daysElapsed + projectedDays;
+        projectedDelay = Math.max(0, projectedTotal - totalDays);
+      }
 
       return {
         ...ini,
         original,
         completed,
         remaining,
-        totalHU: ini.stories?.length || 0,
+        totalHU: stories.length,
         hasDelay,
+        projectedDelay,
       };
     });
   }, [initiatives]);
@@ -140,6 +172,7 @@ export default function InitiativesOverviewPage() {
             <th>Original (hrs)</th>
             <th>Completed (hrs)</th>
             <th>Remaining (hrs)</th>
+            <th>Projected Delay (days)</th>
             <th>Status</th>
             <th>Acciones</th>
           </tr>
@@ -181,6 +214,7 @@ export default function InitiativesOverviewPage() {
               <td>{row.original}</td>
               <td>{row.completed}</td>
               <td>{row.remaining}</td>
+              <td>{row.projectedDelay}</td>
               <td>
                 {row.hasDelay ? (
                   <span className="badge bg-danger">Con retrasos</span>
@@ -206,7 +240,7 @@ export default function InitiativesOverviewPage() {
           ))}
           {summary.length === 0 && (
             <tr>
-              <td colSpan="9" className="text-center text-muted">
+              <td colSpan="10" className="text-center text-muted">
                 No hay iniciativas, agrega una arriba.
               </td>
             </tr>
