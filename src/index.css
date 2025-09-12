@@ -1,61 +1,96 @@
-/* Global theme for a modern management look */
+/* Global light theme for a clean dashboard look */
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #121212;
-  color: #eaeaea;
+  background-color: #f5f5f9;
+  color: #495057;
 }
 
+/* Top navbar */
 .navbar {
-  border-bottom: 1px solid #2c2c2c;
+  border-bottom: 1px solid #e0e0e0;
+  z-index: 1030;
 }
 
+/* Sidebar layout */
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  padding-top: 4.5rem;
+}
+
+.sidebar .nav-link {
+  color: #495057;
+  border-radius: 0.375rem;
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}
+
+.content-wrapper {
+  padding: 5rem 1.5rem 1.5rem;
+  min-height: 100vh;
+  background-color: #f5f5f9;
+}
+
+.sidebar-active {
+  margin-left: 240px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    left: -240px;
+    transition: left 0.3s ease;
+  }
+  .sidebar.show {
+    left: 0;
+  }
+  .sidebar-active {
+    margin-left: 0;
+  }
+}
+
+/* Cards and tables */
 .card {
   border-radius: 0.5rem;
-  background-color: #1e1e1e;
-  border: 1px solid #2c2c2c;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  transition: box-shadow 0.2s ease;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.card:hover {
-  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+.table thead th {
+  background-color: #f8f9fa;
 }
 
-table.table {
-  color: #eaeaea;
-}
-
-table.table thead th {
-  background-color: #2c2c2c;
-  color: #eaeaea;
-}
-
-table.table tbody tr:hover {
-  background-color: #333333;
-}
-
-/* Colores del SELECT por estado (evita duplicados visuales) */
+/* Status select colors */
 .status-select--todo {
-  background-color: #e9ecef;   /* gris claro */
+  background-color: #e9ecef;
   color: #212529;
 }
+
 .status-select--inprogress {
-  background-color: #ffe08a;   /* amarillo suave */
+  background-color: #ffe08a;
   color: #3a3a3a;
 }
+
 .status-select--done {
-  background-color: #198754;   /* verde bootstrap */
+  background-color: #198754;
   color: #ffffff;
 }
 
-/* Para que el texto no se “desaparezca” en algunos navegadores */
 .status-select--todo:focus,
 .status-select--inprogress:focus,
 .status-select--done:focus {
   color: inherit;
 }
 
-/* Opcional: quitar el “salto” visual del select en Safari/Edge */
 .status-select--todo,
 .status-select--inprogress,
 .status-select--done {

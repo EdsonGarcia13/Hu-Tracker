@@ -168,7 +168,7 @@ export default function HUTrackerPage() {
   const onDeleteHU = (index) => dispatch(removeHU(index));
 
   return (
-    <div className="container py-4">
+    <div className="container-fluid py-4">
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h2 className="m-0">
           📊 Historias de Usuario —{" "}

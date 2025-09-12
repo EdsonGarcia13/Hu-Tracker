@@ -9,11 +9,12 @@ export default function InitiativeDetailPage() {
   if (!initiative) return <p>Iniciativa no encontrada</p>;
 
   return (
-    <div>
+    <div className="container-fluid">
       <h2 className="mb-4">📊 {initiative.name}</h2>
       <div className="card shadow-sm">
         <div className="card-body">
-          <table className="table table-striped align-middle">
+          <div className="table-responsive">
+            <table className="table table-striped align-middle">
             <thead>
               <tr>
                 <th>Title</th>
@@ -39,6 +40,7 @@ export default function InitiativeDetailPage() {
               ))}
             </tbody>
           </table>
+          </div>
           <Link to="/initiatives-overview" className="btn btn-secondary mt-3">
             Volver
           </Link>

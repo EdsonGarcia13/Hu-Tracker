@@ -27,7 +27,7 @@ export default function InitiativesSummaryPage() {
   }, [items]);
 
   return (
-    <div className="container py-4">
+    <div className="container-fluid py-4">
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h2 className="m-0">📈 Resumen por Iniciativa</h2>
         <nav>
