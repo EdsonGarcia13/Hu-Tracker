@@ -54,19 +54,24 @@ export default function InitiativesOverviewPage() {
 
       let projectedDelay = 0;
       if (stories.length > 0) {
-        const start = stories.reduce((min, hu) => {
-          const d = hu["Start Date"] ? new Date(hu["Start Date"]) : today;
-          return d < min ? d : min;
-        }, stories[0]["Start Date"] ? new Date(stories[0]["Start Date"]) : today);
-        const due = stories.reduce((max, hu) => {
-          const d = hu["Due Date"] ? new Date(hu["Due Date"]) : today;
-          return d > max ? d : max;
-        }, stories[0]["Due Date"] ? new Date(stories[0]["Due Date"]) : today);
+        const start = ini.startDate
+          ? new Date(ini.startDate)
+          : stories.reduce((min, hu) => {
+              const d = hu["Start Date"] ? new Date(hu["Start Date"]) : today;
+              return d < min ? d : min;
+            }, stories[0]["Start Date"] ? new Date(stories[0]["Start Date"]) : today);
+        const due = ini.dueDate
+          ? new Date(ini.dueDate)
+          : stories.reduce((max, hu) => {
+              const d = hu["Due Date"] ? new Date(hu["Due Date"]) : today;
+              return d > max ? d : max;
+            }, stories[0]["Due Date"] ? new Date(stories[0]["Due Date"]) : today);
 
-        const totalDays = Math.max(
+        const fallbackTotal = Math.max(
           1,
           businessDaysBetween(start, due) - 1
         );
+        const totalDays = ini.sprintDays || fallbackTotal;
         const daysElapsed = Math.max(
           0,
           businessDaysBetween(start, today) - 1
@@ -126,18 +131,25 @@ export default function InitiativesOverviewPage() {
       <div className="card shadow-sm mb-4">
         <div className="card-body">
           <h5 className="card-title mb-3">Agregar Nueva Iniciativa</h5>
-          <div className="row g-2">
+          <div className="row g-2 align-items-end">
             <div className="col-md-3">
+              <label htmlFor="new-ini-name" className="form-label">
+                Nombre
+              </label>
               <input
+                id="new-ini-name"
                 type="text"
                 className="form-control"
-                placeholder="Nombre"
                 value={newIni.name}
                 onChange={(e) => setNewIni({ ...newIni, name: e.target.value })}
               />
             </div>
             <div className="col-md-3">
+              <label htmlFor="new-ini-start" className="form-label">
+                Fecha inicio
+              </label>
               <input
+                id="new-ini-start"
                 type="date"
                 className="form-control"
                 value={newIni.startDate}
@@ -145,7 +157,11 @@ export default function InitiativesOverviewPage() {
               />
             </div>
             <div className="col-md-3">
+              <label htmlFor="new-ini-due" className="form-label">
+                Fecha fin
+              </label>
               <input
+                id="new-ini-due"
                 type="date"
                 className="form-control"
                 value={newIni.dueDate}
@@ -153,10 +169,13 @@ export default function InitiativesOverviewPage() {
               />
             </div>
             <div className="col-md-2">
+              <label htmlFor="new-ini-sprint" className="form-label">
+                Días sprint
+              </label>
               <input
+                id="new-ini-sprint"
                 type="number"
                 className="form-control"
-                placeholder="Días sprint"
                 value={newIni.sprintDays}
                 onChange={(e) =>
                   setNewIni({ ...newIni, sprintDays: e.target.value })
