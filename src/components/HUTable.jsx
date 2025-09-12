@@ -66,14 +66,6 @@ export default function HUTable({
             </thead>
             <tbody>
               {data.map((row, idx) => {
-                const start = row["Start Date"]
-                  ? new Date(row["Start Date"])
-                  : new Date();
-                const due = row["Due Date"]
-                  ? new Date(row["Due Date"])
-                  : new Date();
-                const today = new Date();
-
                 const { elapsedDays, delayHours, delayDays } =
                   calculateElapsedAndDelay(
                     new Date(row["Start Date"]),

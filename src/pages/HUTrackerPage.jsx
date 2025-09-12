@@ -11,11 +11,8 @@ import {
 import HUForm from "../components/HUForm";
 import HUTable from "../components/HUTable";
 import BurndownChart from "../components/BurndownChart";
-import {
-  WORK_HOURS_PER_DAY,
-  businessDaysBetween,
-  calculateElapsedAndDelay,
-} from "../utils/timeCalculations";
+import SprintBurndownChart from "../components/SprintBurndownChart";
+import { WORK_HOURS_PER_DAY, calculateElapsedAndDelay } from "../utils/timeCalculations";
 import { useParams, Link } from "react-router-dom";
 import { initiativesMock } from "../mocks/initiativesMock";
 
@@ -113,7 +110,6 @@ export default function HUTrackerPage() {
       const today = new Date();
 
       const {
-        elapsedDays,
         delayHours,
         delayDays,
         capacityHoursUntilDue,
@@ -219,7 +215,10 @@ export default function HUTrackerPage() {
         onDelete={onDeleteHU}
       />
 
-      {/* Chart */}
+      {/* Sprint Burndown */}
+      <SprintBurndownChart tasks={sprintFiltered} />
+
+      {/* Detalle por HU */}
       <BurndownChart
         burndownData={burndownData}
         initiative={selectedInitiative}
