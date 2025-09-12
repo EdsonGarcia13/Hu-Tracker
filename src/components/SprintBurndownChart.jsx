@@ -24,7 +24,7 @@ function addBusinessDays(start, days) {
   return date;
 }
 
-export default function SprintBurndownChart({ tasks }) {
+export default function SprintBurndownChart({ tasks, sprintDays }) {
   const { points, delay } = useMemo(() => {
     if (!tasks || tasks.length === 0) return { points: [], delay: 0 };
 
@@ -45,8 +45,11 @@ export default function SprintBurndownChart({ tasks }) {
     );
     const totalOriginal = parsed.reduce((sum, t) => sum + t.original, 0);
     const totalCompleted = parsed.reduce((sum, t) => sum + t.completed, 0);
-
-    const totalDays = Math.max(1, businessDaysBetween(startDate, dueDate) - 1);
+    const fallbackTotal = Math.max(
+      1,
+      businessDaysBetween(startDate, dueDate) - 1
+    );
+    const totalDays = sprintDays || fallbackTotal;
     const today = new Date();
     const daysElapsed = Math.max(
       0,
@@ -72,7 +75,7 @@ export default function SprintBurndownChart({ tasks }) {
 
     const delayDays = Math.max(0, projectedTotalDays - totalDays);
     return { points: pts, delay: delayDays };
-  }, [tasks]);
+  }, [tasks, sprintDays]);
 
   if (!points.length) return null;
 

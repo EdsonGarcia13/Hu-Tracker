@@ -1,17 +1,37 @@
 /* Global theme for a modern management look */
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #f5f7fa;
-  color: #212529;
+  background-color: #121212;
+  color: #eaeaea;
 }
 
 .navbar {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #2c2c2c;
 }
 
 .card {
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: #1e1e1e;
+  border: 1px solid #2c2c2c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+}
+
+table.table {
+  color: #eaeaea;
+}
+
+table.table thead th {
+  background-color: #2c2c2c;
+  color: #eaeaea;
+}
+
+table.table tbody tr:hover {
+  background-color: #333333;
 }
 
 /* Colores del SELECT por estado (evita duplicados visuales) */

@@ -5,6 +5,7 @@ export const initiativesMock = [
     name: "Ecommerce Platform",
     startDate: "2025-09-01",
     dueDate: "2025-09-15",
+    sprintDays: 10,
     stories: [
       {
         id: "hu-1",
@@ -33,6 +34,7 @@ export const initiativesMock = [
     name: "Analytics Dashboard",
     startDate: "2025-09-05",
     dueDate: "2025-09-20",
+    sprintDays: 15,
     stories: [
       {
         id: "hu-3",
