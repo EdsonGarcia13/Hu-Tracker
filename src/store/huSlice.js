@@ -40,7 +40,9 @@ export const huSlice = createSlice({
       // { id, key, value }
       const { id, key, value } = payload;
       const idx = state.initiatives.findIndex((i) => i.id === id);
-      if (idx !== -1) state.initiatives[idx][key] = value;
+      if (idx !== -1)
+        state.initiatives[idx][key] =
+          key === "sprintDays" ? Number(value) : value;
     },
     removeInitiativeById: (state, { payload }) => {
       // payload: id de la iniciativa

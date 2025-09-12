@@ -66,11 +66,21 @@ export default function HUTable({
             </thead>
             <tbody>
               {data.map((row, idx) => {
+                const effectiveToday =
+                  row.State === "Done" &&
+                  Number(row["Completed Work"]) >=
+                    Number(row["Original Estimate"])
+                    ? new Date(
+                        row["Completion Date"] ||
+                          row["Due Date"] ||
+                          row["Start Date"]
+                      )
+                    : new Date();
                 const { elapsedDays, delayHours, delayDays } =
                   calculateElapsedAndDelay(
                     new Date(row["Start Date"]),
-                    new Date(row["Due Date"]),
-                    new Date(),
+                    new Date(row["Completion Date"] || row["Due Date"]),
+                    effectiveToday,
                     Number(row["Original Estimate"]) || 0,
                     Number(row["Completed Work"]) || 0
                   );

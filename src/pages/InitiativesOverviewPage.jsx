@@ -30,6 +30,7 @@ export default function InitiativesOverviewPage() {
     name: "",
     startDate: "",
     dueDate: "",
+    sprintDays: 10,
   });
 
   const summary = useMemo(() => {
@@ -95,9 +96,16 @@ export default function InitiativesOverviewPage() {
       ...newIni,
       id: `ini-${Date.now()}`,
       stories: [],
+      sprintDays: Number(newIni.sprintDays) || 10,
     };
     dispatch(addInitiative(iniToAdd));
-    setNewIni({ id: "", name: "", startDate: "", dueDate: "" });
+    setNewIni({
+      id: "",
+      name: "",
+      startDate: "",
+      dueDate: "",
+      sprintDays: 10,
+    });
   };
 
   const handleEditById = (id, key, value) => {
@@ -119,7 +127,7 @@ export default function InitiativesOverviewPage() {
         <div className="card-body">
           <h5 className="card-title mb-3">Agregar Nueva Iniciativa</h5>
           <div className="row g-2">
-            <div className="col-md-4">
+            <div className="col-md-3">
               <input
                 type="text"
                 className="form-control"
@@ -145,6 +153,17 @@ export default function InitiativesOverviewPage() {
               />
             </div>
             <div className="col-md-2">
+              <input
+                type="number"
+                className="form-control"
+                placeholder="Días sprint"
+                value={newIni.sprintDays}
+                onChange={(e) =>
+                  setNewIni({ ...newIni, sprintDays: e.target.value })
+                }
+              />
+            </div>
+            <div className="col-md-1">
               <button className="btn btn-primary w-100" onClick={handleAddInitiative}>
                 Agregar
               </button>
@@ -168,6 +187,7 @@ export default function InitiativesOverviewPage() {
             <th>Initiative</th>
             <th>Start Date</th>
             <th>Due Date</th>
+            <th>Sprint Days</th>
             <th>Historias</th>
             <th>Original (hrs)</th>
             <th>Completed (hrs)</th>
@@ -210,6 +230,16 @@ export default function InitiativesOverviewPage() {
                   }
                 />
               </td>
+              <td>
+                <input
+                  type="number"
+                  className="form-control form-control-sm"
+                  value={row.sprintDays || ""}
+                  onChange={(e) =>
+                    handleEditById(row.id, "sprintDays", e.target.value)
+                  }
+                />
+              </td>
               <td>{row.totalHU}</td>
               <td>{row.original}</td>
               <td>{row.completed}</td>
@@ -240,7 +270,7 @@ export default function InitiativesOverviewPage() {
           ))}
           {summary.length === 0 && (
             <tr>
-              <td colSpan="10" className="text-center text-muted">
+              <td colSpan="11" className="text-center text-muted">
                 No hay iniciativas, agrega una arriba.
               </td>
             </tr>

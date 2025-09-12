@@ -19,7 +19,7 @@ import { initiativesMock } from "../mocks/initiativesMock";
 export default function HUTrackerPage() {
   const { id } = useParams(); // initiative id
   const dispatch = useDispatch();
-  const { items, selectedInitiative } = useSelector((s) => s.hu);
+  const { items, selectedInitiative, initiatives } = useSelector((s) => s.hu);
 
   const [newHU, setNewHU] = useState({
     Title: "",
@@ -94,6 +94,11 @@ export default function HUTrackerPage() {
     if (selectedSprint === "General") return filtered;
     return filtered.filter((hu) => hu.Sprint === selectedSprint);
   }, [filtered, selectedSprint]);
+
+  const currentInitiative = useMemo(
+    () => initiatives.find((i) => i.name === selectedInitiative),
+    [initiatives, selectedInitiative]
+  );
 
   // build burndown dataset
 
@@ -216,7 +221,10 @@ export default function HUTrackerPage() {
       />
 
       {/* Sprint Burndown */}
-      <SprintBurndownChart tasks={sprintFiltered} />
+      <SprintBurndownChart
+        tasks={sprintFiltered}
+        sprintDays={currentInitiative?.sprintDays}
+      />
 
       {/* Detalle por HU */}
       <BurndownChart
