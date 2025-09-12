@@ -119,7 +119,7 @@ export default function InitiativesOverviewPage() {
   };
 
   return (
-    <div>
+    <div className="container-fluid">
       <h2 className="mb-4">📈 Resumen por Iniciativa</h2>
 
       {/* Formulario para nueva iniciativa */}
