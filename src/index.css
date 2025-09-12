@@ -96,3 +96,13 @@ body {
 .status-select--done {
   background-image: none;
 }
+
+/* HU table styling */
+.hu-table-card {
+  border-color: #cfe2ff;
+}
+
+.hu-table-card .table thead th {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+}

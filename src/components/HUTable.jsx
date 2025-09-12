@@ -19,7 +19,7 @@ export default function HUTable({
   };
 
   return (
-    <div className="card shadow-sm">
+    <div className="card shadow-sm hu-table-card">
       <div className="card-body">
         {/* Header con título y filtro sprint */}
         <div className="d-flex justify-content-between align-items-center mb-3">

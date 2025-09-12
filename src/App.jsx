@@ -52,16 +52,6 @@ export default function App() {
                 to="/"
                 className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
               >
-                Dashboard
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                to="/initiatives"
-                className={`nav-link ${
-                  location.pathname.startsWith("/initiatives") ? "active" : ""
-                }`}
-              >
                 Iniciativas
               </Link>
             </li>
