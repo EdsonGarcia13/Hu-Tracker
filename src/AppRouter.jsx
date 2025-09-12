@@ -18,7 +18,6 @@ const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { index: true, element: <InitiativesOverviewPage /> },
-          { path: "initiatives", element: <InitiativesOverviewPage /> },
           { path: "initiatives/:id", element: <HUTrackerPage /> },
         ],
       },

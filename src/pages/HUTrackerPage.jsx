@@ -175,7 +175,7 @@ export default function HUTrackerPage() {
           <span className="text-primary">{selectedInitiative || "…"}</span>
         </h2>
         <nav>
-          <Link to="/initiatives" className="btn btn-outline-secondary">
+          <Link to="/" className="btn btn-outline-secondary">
             Volver a Iniciativas
           </Link>
         </nav>
