@@ -53,6 +53,8 @@ export default function InitiativesOverviewPage() {
       const totalSprints = sprintNumbers.length;
       const expectedPercentPerSprint =
         totalSprints > 0 ? +(100 / totalSprints).toFixed(2) : 0;
+      const expectedHoursPerSprint =
+        totalSprints > 0 ? +(original / totalSprints).toFixed(2) : 0;
       const completionPercent =
         original > 0 ? +((completed / original) * 100).toFixed(1) : 0;
 
