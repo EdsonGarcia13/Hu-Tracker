@@ -9,7 +9,11 @@ import {
   setInitiatives,
 } from "../store/huSlice";
 import { initiativesMock } from "../mocks/initiativesMock";
-import { businessDaysBetween, addBusinessDays } from "../utils/timeCalculations";
+import {
+  businessDaysBetween,
+  addBusinessDays,
+  WORK_HOURS_PER_DAY,
+} from "../utils/timeCalculations";
 
 export default function InitiativesOverviewPage() {
   const dispatch = useDispatch();
@@ -47,14 +51,18 @@ export default function InitiativesOverviewPage() {
         ini.startDate && ini.dueDate
           ? businessDaysBetween(new Date(ini.startDate), new Date(ini.dueDate))
           : 0;
-      const sprintNumbers = [
-        ...new Set(stories.map((hu) => hu.sprint).filter((n) => n != null)),
-      ].sort((a, b) => a - b);
-      const totalSprints = sprintNumbers.length;
+      const totalSprints =
+        ini.startDate && ini.dueDate && ini.sprintDays
+          ? Math.ceil(
+              businessDaysBetween(
+                new Date(ini.startDate),
+                new Date(ini.dueDate)
+              ) / ini.sprintDays
+            )
+          : 0;
+      const sprintNumbers = Array.from({ length: totalSprints }, (_, i) => i + 1);
       const expectedPercentPerSprint =
         totalSprints > 0 ? +(100 / totalSprints).toFixed(2) : 0;
-      const expectedHoursPerSprint =
-        totalSprints > 0 ? +(original / totalSprints).toFixed(2) : 0;
       const completionPercent =
         original > 0 ? +((completed / original) * 100).toFixed(1) : 0;
 
@@ -80,10 +88,25 @@ export default function InitiativesOverviewPage() {
           (acc, hu) => acc + (hu["Remaining Work"] || 0),
           0
         );
+        let projectedEnd = sprintEnd;
+        if (debtHours > 0 && sprintEnd) {
+          const today = new Date();
+          const delayDays = Math.max(
+            0,
+            today > sprintEnd
+              ? businessDaysBetween(sprintEnd, today) - 1
+              : 0
+          );
+          const extraDays = Math.ceil(debtHours / WORK_HOURS_PER_DAY);
+          projectedEnd = addBusinessDays(sprintEnd, delayDays + extraDays);
+        }
         return {
           number: num,
           start: sprintStart ? sprintStart.toISOString().slice(0, 10) : "",
           end: sprintEnd ? sprintEnd.toISOString().slice(0, 10) : "",
+          projectedEnd: projectedEnd
+            ? projectedEnd.toISOString().slice(0, 10)
+            : "",
           expectedHours,
           completedHours,
           debtHours,
@@ -157,6 +180,15 @@ export default function InitiativesOverviewPage() {
 
   const handleAddInitiative = () => {
     if (!newIni.name) return;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (newIni.startDate && newIni.startDate < todayStr) {
+      alert("La fecha de inicio no puede ser en el pasado");
+      return;
+    }
+    if (newIni.startDate && newIni.dueDate && newIni.dueDate < newIni.startDate) {
+      alert("La fecha fin debe ser posterior al inicio");
+      return;
+    }
     const iniToAdd = {
       ...newIni,
       id: `ini-${Date.now()}`,
@@ -212,6 +244,7 @@ export default function InitiativesOverviewPage() {
                 id="new-ini-start"
                 type="date"
                 className="form-control"
+                min={new Date().toISOString().slice(0, 10)}
                 value={newIni.startDate}
                 onChange={(e) => setNewIni({ ...newIni, startDate: e.target.value })}
               />
@@ -224,6 +257,7 @@ export default function InitiativesOverviewPage() {
                 id="new-ini-due"
                 type="date"
                 className="form-control"
+                min={newIni.startDate || new Date().toISOString().slice(0, 10)}
                 value={newIni.dueDate}
                 onChange={(e) => setNewIni({ ...newIni, dueDate: e.target.value })}
               />
@@ -361,6 +395,7 @@ export default function InitiativesOverviewPage() {
                             <th>#</th>
                             <th>Inicio</th>
                             <th>Fin</th>
+                            <th>Proyección fin</th>
                             <th>Horas estimadas</th>
                             <th>Horas cumplidas</th>
                             <th>Horas deuda</th>
@@ -374,6 +409,7 @@ export default function InitiativesOverviewPage() {
                               <td>{s.number}</td>
                               <td>{s.start}</td>
                               <td>{s.end}</td>
+                              <td>{s.projectedEnd}</td>
                               <td>{s.expectedHours}</td>
                               <td>{s.completedHours}</td>
                               <td>{s.debtHours}</td>

@@ -1,7 +1,14 @@
 import React from "react";
 import StatusSelect from "./StatusSelect";
 
-export default function HUForm({ newHU, setNewHU, handleAddHU }) {
+export default function HUForm({
+  newHU,
+  setNewHU,
+  handleAddHU,
+  minStart,
+  maxEnd,
+  sprintLimit,
+}) {
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-body">
@@ -48,7 +55,9 @@ export default function HUForm({ newHU, setNewHU, handleAddHU }) {
           <div className="col-md-6">
             <label className="form-label">Sprint</label>
             <input
-              type="text"
+              type="number"
+              min={1}
+              max={sprintLimit || undefined}
               className="form-control"
               value={newHU["Sprint"]}
               onChange={(e) =>
@@ -61,6 +70,8 @@ export default function HUForm({ newHU, setNewHU, handleAddHU }) {
             <input
               type="date"
               className="form-control"
+              min={minStart}
+              max={maxEnd || undefined}
               value={newHU["Start Date"]}
               onChange={(e) =>
                 setNewHU({ ...newHU, "Start Date": e.target.value })
@@ -72,6 +83,8 @@ export default function HUForm({ newHU, setNewHU, handleAddHU }) {
             <input
               type="date"
               className="form-control"
+              min={newHU["Start Date"] || minStart}
+              max={maxEnd || undefined}
               value={newHU["Due Date"]}
               onChange={(e) =>
                 setNewHU({ ...newHU, "Due Date": e.target.value })
