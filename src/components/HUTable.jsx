@@ -9,6 +9,9 @@ export default function HUTable({
   availableSprints,
   selectedSprint,
   setSelectedSprint,
+  startLimit,
+  endLimit,
+  sprintLimit,
 }) {
   const getDeviation = (dueDate, completed, original) => {
     if (!dueDate) return "-";
@@ -141,7 +144,9 @@ export default function HUTable({
                     </td>
                     <td>
                       <input
-                        type="text"
+                        type="number"
+                        min={1}
+                        max={sprintLimit || undefined}
                         className="form-control form-control-sm"
                         value={row.Sprint || ""}
                         onChange={(e) =>
@@ -153,6 +158,8 @@ export default function HUTable({
                       <input
                         type="date"
                         className="form-control form-control-sm"
+                        min={startLimit}
+                        max={endLimit || undefined}
                         value={row["Start Date"] || ""}
                         onChange={(e) =>
                           handleEdit(idx, "Start Date", e.target.value)
@@ -163,6 +170,8 @@ export default function HUTable({
                       <input
                         type="date"
                         className="form-control form-control-sm"
+                        min={row["Start Date"] || startLimit}
+                        max={endLimit || undefined}
                         value={row["Due Date"] || ""}
                         onChange={(e) =>
                           handleEdit(idx, "Due Date", e.target.value)

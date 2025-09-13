@@ -12,7 +12,11 @@ import HUForm from "../components/HUForm";
 import HUTable from "../components/HUTable";
 import BurndownChart from "../components/BurndownChart";
 import SprintBurndownChart from "../components/SprintBurndownChart";
-import { WORK_HOURS_PER_DAY, calculateElapsedAndDelay } from "../utils/timeCalculations";
+import {
+  WORK_HOURS_PER_DAY,
+  calculateElapsedAndDelay,
+  businessDaysBetween,
+} from "../utils/timeCalculations";
 import { useParams, Link } from "react-router-dom";
 import { initiativesMock } from "../mocks/initiativesMock";
 
@@ -43,7 +47,7 @@ export default function HUTrackerPage() {
     const rowsFromMock = ini.stories.map((s) => ({
       ...s,
       Initiative: ini.name,
-      Sprint: s.Sprint || "",
+      Sprint: s.Sprint != null || s.sprint != null ? String(s.Sprint ?? s.sprint) : "",
     }));
     dispatch(loadFromExcel(rowsFromMock));
     dispatch(setSelectedInitiative(ini.name));
@@ -86,9 +90,12 @@ export default function HUTrackerPage() {
 
   // filter by sprint
   const availableSprints = useMemo(() => {
-    const all = filtered.map((hu) => hu.Sprint).filter(Boolean);
+    const all = filtered.map((hu) => String(hu.Sprint)).filter(Boolean);
+    for (let i = 1; i <= totalPlannedSprints; i++) {
+      all.push(String(i));
+    }
     return ["General", ...new Set(all)];
-  }, [filtered]);
+  }, [filtered, totalPlannedSprints]);
 
   const sprintFiltered = useMemo(() => {
     if (selectedSprint === "General") return filtered;
@@ -99,6 +106,31 @@ export default function HUTrackerPage() {
     () => initiatives.find((i) => i.name === selectedInitiative),
     [initiatives, selectedInitiative]
   );
+
+  const totalPlannedSprints = useMemo(() => {
+    if (
+      currentInitiative?.startDate &&
+      currentInitiative?.dueDate &&
+      currentInitiative?.sprintDays
+    ) {
+      const days = businessDaysBetween(
+        new Date(currentInitiative.startDate),
+        new Date(currentInitiative.dueDate)
+      );
+      return Math.ceil(days / currentInitiative.sprintDays);
+    }
+    return 0;
+  }, [currentInitiative]);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const minStartDate = useMemo(() => {
+    const start = currentInitiative?.startDate;
+    if (start) {
+      return new Date(start) > new Date(todayStr) ? start : todayStr;
+    }
+    return todayStr;
+  }, [currentInitiative, todayStr]);
+  const maxEndDate = currentInitiative?.dueDate || "";
 
   // build burndown dataset
 
@@ -142,10 +174,32 @@ export default function HUTrackerPage() {
   // actions
   const onAddHU = () => {
     if (!newHU.Title || !newHU.State) return;
+    if (currentInitiative) {
+      const sprintNum = Number(newHU.Sprint);
+      if (
+        sprintNum < 1 ||
+        (totalPlannedSprints && sprintNum > totalPlannedSprints)
+      ) {
+        alert("Sprint fuera de rango");
+        return;
+      }
+      if (newHU["Start Date"] && newHU["Start Date"] < minStartDate) {
+        alert("La fecha de inicio no puede ser anterior al inicio de la iniciativa ni al día de hoy");
+        return;
+      }
+      if (newHU["Due Date"] && newHU["Start Date"] && newHU["Due Date"] < newHU["Start Date"]) {
+        alert("La fecha fin debe ser posterior a la fecha de inicio");
+        return;
+      }
+      if (newHU["Due Date"] && maxEndDate && newHU["Due Date"] > maxEndDate) {
+        alert("La fecha fin no puede exceder la de la iniciativa");
+        return;
+      }
+    }
     const toAdd = {
       ...newHU,
       Initiative: selectedInitiative || newHU.Initiative,
-      Sprint: newHU.Sprint || "",
+      Sprint: newHU.Sprint ? String(newHU.Sprint) : "",
     };
     dispatch(addHU(toAdd));
     setNewHU({
@@ -162,8 +216,22 @@ export default function HUTrackerPage() {
     });
   };
 
-  const onEditHU = (index, key, value) =>
+  const onEditHU = (index, key, value) => {
+    if (currentInitiative) {
+      if (key === "Sprint") {
+        const num = Number(value);
+        if (num < 1 || (totalPlannedSprints && num > totalPlannedSprints)) return;
+      }
+      if (key === "Start Date") {
+        if (value < minStartDate || (maxEndDate && value > maxEndDate)) return;
+      }
+      if (key === "Due Date") {
+        const startVal = items[index]["Start Date"] || minStartDate;
+        if (value < startVal || (maxEndDate && value > maxEndDate)) return;
+      }
+    }
     dispatch(editHU({ index, key, value }));
+  };
 
   const onDeleteHU = (index) => dispatch(removeHU(index));
 
@@ -195,29 +263,26 @@ export default function HUTrackerPage() {
       </div>
 
       {/* Formulario HU */}
-      <HUForm newHU={newHU} setNewHU={setNewHU} handleAddHU={onAddHU} />
-
-      {/* Sprint filter */}
-      <div className="mb-3">
-        <label className="form-label fw-bold">Filtrar por Sprint</label>
-        <select
-          className="form-select"
-          value={selectedSprint}
-          onChange={(e) => setSelectedSprint(e.target.value)}
-        >
-          {availableSprints.map((s, idx) => (
-            <option key={idx} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
+      <HUForm
+        newHU={newHU}
+        setNewHU={setNewHU}
+        handleAddHU={onAddHU}
+        minStart={minStartDate}
+        maxEnd={maxEndDate}
+        sprintLimit={totalPlannedSprints}
+      />
 
       {/* Tabla HU */}
       <HUTable
         data={sprintFiltered}
         handleEdit={onEditHU}
         onDelete={onDeleteHU}
+        availableSprints={availableSprints}
+        selectedSprint={selectedSprint}
+        setSelectedSprint={setSelectedSprint}
+        startLimit={minStartDate}
+        endLimit={maxEndDate}
+        sprintLimit={totalPlannedSprints}
       />
 
       {/* Sprint Burndown */}
