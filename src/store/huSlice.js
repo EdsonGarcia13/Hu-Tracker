@@ -20,7 +20,8 @@ const normalizeRow = (raw) => {
     "Start Date": raw["Start Date"] || "",
     "Due Date": raw["Due Date"] || "",
     Initiative: raw.Initiative || "General",
-    Sprint: raw.Sprint || "", 
+    Sprint: raw.Sprint || "",
+    isAdditional: raw.isAdditional || false,
   };
 };
 

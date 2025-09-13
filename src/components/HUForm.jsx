@@ -84,7 +84,6 @@ export default function HUForm({
               type="date"
               className="form-control"
               min={newHU["Start Date"] || minStart}
-              max={maxEnd || undefined}
               value={newHU["Due Date"]}
               onChange={(e) =>
                 setNewHU({ ...newHU, "Due Date": e.target.value })

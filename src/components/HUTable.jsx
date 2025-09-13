@@ -64,6 +64,7 @@ export default function HUTable({
                 <th>Delay (hrs)</th>
                 <th>Delay (days)</th>
                 <th>Deviation</th>
+                <th>Extra</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -91,7 +92,9 @@ export default function HUTable({
                 return (
                   <tr
                     key={idx}
-                    className={delayHours > 0 ? "table-danger" : ""}
+                    className={`${delayHours > 0 ? "table-danger" : ""} ${
+                      row.isAdditional ? "table-warning" : ""
+                    }`}
                   >
                     <td>
                       <input
@@ -171,7 +174,6 @@ export default function HUTable({
                         type="date"
                         className="form-control form-control-sm"
                         min={row["Start Date"] || startLimit}
-                        max={endLimit || undefined}
                         value={row["Due Date"] || ""}
                         onChange={(e) =>
                           handleEdit(idx, "Due Date", e.target.value)
@@ -200,6 +202,7 @@ export default function HUTable({
                         )}
                       </span>
                     </td>
+                    <td>{row.isAdditional ? "⚠️" : ""}</td>
                     <td>
                       <button
                         className="btn btn-sm btn-danger"

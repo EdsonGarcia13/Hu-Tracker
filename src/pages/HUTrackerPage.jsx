@@ -36,6 +36,7 @@ export default function HUTrackerPage() {
     "Due Date": "",
     Initiative: "",
     Sprint: "",
+    isAdditional: false,
   });
 
   const [selectedSprint, setSelectedSprint] = useState("General");
@@ -88,20 +89,6 @@ export default function HUTrackerPage() {
       : items;
   }, [items, selectedInitiative]);
 
-  // filter by sprint
-  const availableSprints = useMemo(() => {
-    const all = filtered.map((hu) => String(hu.Sprint)).filter(Boolean);
-    for (let i = 1; i <= totalPlannedSprints; i++) {
-      all.push(String(i));
-    }
-    return ["General", ...new Set(all)];
-  }, [filtered, totalPlannedSprints]);
-
-  const sprintFiltered = useMemo(() => {
-    if (selectedSprint === "General") return filtered;
-    return filtered.filter((hu) => hu.Sprint === selectedSprint);
-  }, [filtered, selectedSprint]);
-
   const currentInitiative = useMemo(
     () => initiatives.find((i) => i.name === selectedInitiative),
     [initiatives, selectedInitiative]
@@ -121,6 +108,20 @@ export default function HUTrackerPage() {
     }
     return 0;
   }, [currentInitiative]);
+
+  // filter by sprint
+  const availableSprints = useMemo(() => {
+    const all = filtered.map((hu) => String(hu.Sprint)).filter(Boolean);
+    for (let i = 1; i <= totalPlannedSprints; i++) {
+      all.push(String(i));
+    }
+    return ["General", ...new Set(all)];
+  }, [filtered, totalPlannedSprints]);
+
+  const sprintFiltered = useMemo(() => {
+    if (selectedSprint === "General") return filtered;
+    return filtered.filter((hu) => hu.Sprint === selectedSprint);
+  }, [filtered, selectedSprint]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const minStartDate = useMemo(() => {
@@ -191,15 +192,20 @@ export default function HUTrackerPage() {
         alert("La fecha fin debe ser posterior a la fecha de inicio");
         return;
       }
-      if (newHU["Due Date"] && maxEndDate && newHU["Due Date"] > maxEndDate) {
-        alert("La fecha fin no puede exceder la de la iniciativa");
-        return;
-      }
+    }
+    let isAdditional = false;
+    if (newHU["Due Date"] && maxEndDate && newHU["Due Date"] > maxEndDate) {
+      const confirmExtra = window.confirm(
+        "La fecha fin excede la de la iniciativa. Se marcará como tarea adicional. ¿Deseas continuar?"
+      );
+      if (!confirmExtra) return;
+      isAdditional = true;
     }
     const toAdd = {
       ...newHU,
       Initiative: selectedInitiative || newHU.Initiative,
       Sprint: newHU.Sprint ? String(newHU.Sprint) : "",
+      isAdditional,
     };
     dispatch(addHU(toAdd));
     setNewHU({
@@ -213,6 +219,7 @@ export default function HUTrackerPage() {
       "Due Date": "",
       Initiative: selectedInitiative || "",
       Sprint: "",
+      isAdditional: false,
     });
   };
 
@@ -227,7 +234,11 @@ export default function HUTrackerPage() {
       }
       if (key === "Due Date") {
         const startVal = items[index]["Start Date"] || minStartDate;
-        if (value < startVal || (maxEndDate && value > maxEndDate)) return;
+        if (value < startVal) return;
+        const isAdditional = maxEndDate && value > maxEndDate;
+        dispatch(editHU({ index, key: "Due Date", value }));
+        dispatch(editHU({ index, key: "isAdditional", value: isAdditional }));
+        return;
       }
     }
     dispatch(editHU({ index, key, value }));
