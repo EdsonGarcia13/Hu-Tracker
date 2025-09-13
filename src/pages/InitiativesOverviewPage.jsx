@@ -54,6 +54,8 @@ export default function InitiativesOverviewPage() {
         totalSprints > 0 ? +(100 / totalSprints).toFixed(2) : 0;
       const expectedHoursPerSprint =
         totalSprints > 0 ? +(original / totalSprints).toFixed(2) : 0;
+      const completionPercent =
+        original > 0 ? +((completed / original) * 100).toFixed(1) : 0;
 
       const sprints = [];
       if (totalSprints > 0 && ini.startDate) {
@@ -148,6 +150,8 @@ export default function InitiativesOverviewPage() {
         expectedPercentPerSprint,
         expectedHoursPerSprint,
         sprints,
+        totalDays: totalBusinessDays,
+        completionPercent,
       };
     });
   }, [initiatives]);
@@ -380,6 +384,12 @@ export default function InitiativesOverviewPage() {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                    <div className="mt-2">
+                      <strong>Total estimado del proyecto:</strong> {row.original}h / {row.totalDays}{" "}
+                      días
+                      <br />
+                      <strong>Porcentaje general:</strong> {row.completionPercent}%
                     </div>
                   </td>
                 </tr>
