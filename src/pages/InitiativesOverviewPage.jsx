@@ -47,9 +47,10 @@ export default function InitiativesOverviewPage() {
         ini.startDate && ini.dueDate
           ? businessDaysBetween(new Date(ini.startDate), new Date(ini.dueDate))
           : 0;
-      const totalSprints = ini.sprintDays
-        ? Math.ceil(totalBusinessDays / ini.sprintDays)
-        : 0;
+      const sprintNumbers = [
+        ...new Set(stories.map((hu) => hu.sprint).filter((n) => n != null)),
+      ].sort((a, b) => a - b);
+      const totalSprints = sprintNumbers.length;
       const expectedPercentPerSprint =
         totalSprints > 0 ? +(100 / totalSprints).toFixed(2) : 0;
       const expectedHoursPerSprint =
@@ -57,46 +58,45 @@ export default function InitiativesOverviewPage() {
       const completionPercent =
         original > 0 ? +((completed / original) * 100).toFixed(1) : 0;
 
-      const sprints = [];
-      if (totalSprints > 0 && ini.startDate) {
-        let sprintStart = new Date(ini.startDate);
-        for (let i = 0; i < totalSprints; i++) {
-          const sprintEnd = addBusinessDays(sprintStart, ini.sprintDays - 1);
-          const storiesInSprint = stories.filter((hu) => {
-            const huStart = hu["Start Date"] ? new Date(hu["Start Date"]) : null;
-            return huStart && huStart >= sprintStart && huStart <= sprintEnd;
-          });
-          const sprintCompleted = storiesInSprint.reduce(
-            (acc, hu) => acc + (hu["Completed Work"] || 0),
-            0
-          );
-          const sprintRemaining = storiesInSprint.reduce(
-            (acc, hu) => acc + (hu["Remaining Work"] || 0),
-            0
-          );
-          sprints.push({
-            number: i + 1,
-            start: sprintStart.toISOString().slice(0, 10),
-            end: sprintEnd.toISOString().slice(0, 10),
-            expectedHours: expectedHoursPerSprint,
-            completedHours: sprintCompleted,
-            debtHours: sprintRemaining,
-            completedPercent:
-              expectedHoursPerSprint > 0
-                ? +((sprintCompleted / expectedHoursPerSprint) * 100).toFixed(1)
-                : 0,
-            debtPercent:
-              expectedHoursPerSprint > 0
-                ? +(
-                    ((expectedHoursPerSprint - sprintCompleted) /
-                      expectedHoursPerSprint) *
-                    100
-                  ).toFixed(1)
-                : 0,
-          });
-          sprintStart = addBusinessDays(sprintEnd, 1);
-        }
-      }
+      const sprints = sprintNumbers.map((num) => {
+        const sprintStart =
+          ini.startDate && ini.sprintDays
+            ? addBusinessDays(new Date(ini.startDate), (num - 1) * ini.sprintDays)
+            : null;
+        const sprintEnd =
+          sprintStart && ini.sprintDays
+            ? addBusinessDays(sprintStart, ini.sprintDays - 1)
+            : null;
+        const storiesInSprint = stories.filter((hu) => hu.sprint === num);
+        const expectedHours = storiesInSprint.reduce(
+          (acc, hu) => acc + (hu["Original Estimate"] || 0),
+          0
+        );
+        const completedHours = storiesInSprint.reduce(
+          (acc, hu) => acc + (hu["Completed Work"] || 0),
+          0
+        );
+        const debtHours = storiesInSprint.reduce(
+          (acc, hu) => acc + (hu["Remaining Work"] || 0),
+          0
+        );
+        return {
+          number: num,
+          start: sprintStart ? sprintStart.toISOString().slice(0, 10) : "",
+          end: sprintEnd ? sprintEnd.toISOString().slice(0, 10) : "",
+          expectedHours,
+          completedHours,
+          debtHours,
+          completedPercent:
+            expectedHours > 0
+              ? +((completedHours / expectedHours) * 100).toFixed(1)
+              : 0,
+          debtPercent:
+            expectedHours > 0
+              ? +((debtHours / expectedHours) * 100).toFixed(1)
+              : 0,
+        };
+      });
 
       const today = new Date();
       const hasDelay = stories.some((hu) => {
@@ -148,7 +148,6 @@ export default function InitiativesOverviewPage() {
         projectedDelay,
         totalSprints,
         expectedPercentPerSprint,
-        expectedHoursPerSprint,
         sprints,
         totalDays: totalBusinessDays,
         completionPercent,
