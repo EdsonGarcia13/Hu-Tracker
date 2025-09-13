@@ -9,7 +9,7 @@ import {
   setInitiatives,
 } from "../store/huSlice";
 import { initiativesMock } from "../mocks/initiativesMock";
-import { businessDaysBetween } from "../utils/timeCalculations";
+import { businessDaysBetween, addBusinessDays } from "../utils/timeCalculations";
 
 export default function InitiativesOverviewPage() {
   const dispatch = useDispatch();
@@ -42,6 +42,59 @@ export default function InitiativesOverviewPage() {
         stories.reduce((acc, hu) => acc + (hu["Completed Work"] || 0), 0) || 0;
       const remaining =
         stories.reduce((acc, hu) => acc + (hu["Remaining Work"] || 0), 0) || 0;
+
+      const totalBusinessDays =
+        ini.startDate && ini.dueDate
+          ? businessDaysBetween(new Date(ini.startDate), new Date(ini.dueDate))
+          : 0;
+      const totalSprints = ini.sprintDays
+        ? Math.ceil(totalBusinessDays / ini.sprintDays)
+        : 0;
+      const expectedPercentPerSprint =
+        totalSprints > 0 ? +(100 / totalSprints).toFixed(2) : 0;
+      const expectedHoursPerSprint =
+        totalSprints > 0 ? +(original / totalSprints).toFixed(2) : 0;
+
+      const sprints = [];
+      if (totalSprints > 0 && ini.startDate) {
+        let sprintStart = new Date(ini.startDate);
+        for (let i = 0; i < totalSprints; i++) {
+          const sprintEnd = addBusinessDays(sprintStart, ini.sprintDays - 1);
+          const storiesInSprint = stories.filter((hu) => {
+            const huStart = hu["Start Date"] ? new Date(hu["Start Date"]) : null;
+            return huStart && huStart >= sprintStart && huStart <= sprintEnd;
+          });
+          const sprintCompleted = storiesInSprint.reduce(
+            (acc, hu) => acc + (hu["Completed Work"] || 0),
+            0
+          );
+          const sprintRemaining = storiesInSprint.reduce(
+            (acc, hu) => acc + (hu["Remaining Work"] || 0),
+            0
+          );
+          sprints.push({
+            number: i + 1,
+            start: sprintStart.toISOString().slice(0, 10),
+            end: sprintEnd.toISOString().slice(0, 10),
+            expectedHours: expectedHoursPerSprint,
+            completedHours: sprintCompleted,
+            debtHours: sprintRemaining,
+            completedPercent:
+              expectedHoursPerSprint > 0
+                ? +((sprintCompleted / expectedHoursPerSprint) * 100).toFixed(1)
+                : 0,
+            debtPercent:
+              expectedHoursPerSprint > 0
+                ? +(
+                    ((expectedHoursPerSprint - sprintCompleted) /
+                      expectedHoursPerSprint) *
+                    100
+                  ).toFixed(1)
+                : 0,
+          });
+          sprintStart = addBusinessDays(sprintEnd, 1);
+        }
+      }
 
       const today = new Date();
       const hasDelay = stories.some((hu) => {
@@ -91,6 +144,10 @@ export default function InitiativesOverviewPage() {
         totalHU: stories.length,
         hasDelay,
         projectedDelay,
+        totalSprints,
+        expectedPercentPerSprint,
+        expectedHoursPerSprint,
+        sprints,
       };
     });
   }, [initiatives]);
@@ -218,74 +275,116 @@ export default function InitiativesOverviewPage() {
         </thead>
         <tbody>
           {summary.map((row) => (
-            <tr key={row.id}>
-              <td>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={row.name}
-                  onChange={(e) =>
-                    handleEditById(row.id, "name", e.target.value)
-                  }
-                />
-              </td>
-              <td>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={row.startDate || ""}
-                  onChange={(e) =>
-                    handleEditById(row.id, "startDate", e.target.value)
-                  }
-                />
-              </td>
-              <td>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={row.dueDate || ""}
-                  onChange={(e) =>
-                    handleEditById(row.id, "dueDate", e.target.value)
-                  }
-                />
-              </td>
-              <td>
-                <input
-                  type="number"
-                  className="form-control form-control-sm"
-                  value={row.sprintDays || ""}
-                  onChange={(e) =>
-                    handleEditById(row.id, "sprintDays", e.target.value)
-                  }
-                />
-              </td>
-              <td>{row.totalHU}</td>
-              <td>{row.original}</td>
-              <td>{row.completed}</td>
-              <td>{row.remaining}</td>
-              <td>{row.projectedDelay}</td>
-              <td>
-                {row.hasDelay ? (
-                  <span className="badge bg-danger">Con retrasos</span>
-                ) : (
-                  <span className="badge bg-success">En tiempo</span>
-                )}
-              </td>
-              <td className="d-flex gap-2">
-                <Link
-                  to={`/initiatives/${row.id}`}
-                  className="btn btn-sm btn-outline-primary"
-                >
-                  Ver HU
-                </Link>
-                <button
-                  className="btn btn-sm btn-danger"
-                  onClick={() => handleDeleteById(row.id)}
-                >
-                  🗑
-                </button>
-              </td>
-            </tr>
+            <React.Fragment key={row.id}>
+              <tr>
+                <td>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={row.name}
+                    onChange={(e) =>
+                      handleEditById(row.id, "name", e.target.value)
+                    }
+                  />
+                </td>
+                <td>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={row.startDate || ""}
+                    onChange={(e) =>
+                      handleEditById(row.id, "startDate", e.target.value)
+                    }
+                  />
+                </td>
+                <td>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={row.dueDate || ""}
+                    onChange={(e) =>
+                      handleEditById(row.id, "dueDate", e.target.value)
+                    }
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    value={row.sprintDays || ""}
+                    onChange={(e) =>
+                      handleEditById(row.id, "sprintDays", e.target.value)
+                    }
+                  />
+                </td>
+                <td>{row.totalHU}</td>
+                <td>{row.original}</td>
+                <td>{row.completed}</td>
+                <td>{row.remaining}</td>
+                <td>{row.projectedDelay}</td>
+                <td>
+                  {row.hasDelay ? (
+                    <span className="badge bg-danger">Con retrasos</span>
+                  ) : (
+                    <span className="badge bg-success">En tiempo</span>
+                  )}
+                </td>
+                <td className="d-flex gap-2">
+                  <Link
+                    to={`/initiatives/${row.id}`}
+                    className="btn btn-sm btn-outline-primary"
+                  >
+                    Ver HU
+                  </Link>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDeleteById(row.id)}
+                  >
+                    🗑
+                  </button>
+                </td>
+              </tr>
+              {row.totalSprints > 0 && (
+                <tr className="table-secondary">
+                  <td colSpan="11">
+                    <div>
+                      Estimado teórico: {row.totalSprints} sprints, {row.expectedPercentPerSprint}
+                      % por sprint
+                    </div>
+                    <div className="table-responsive">
+                      <table className="table table-sm mb-0">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Horas estimadas</th>
+                            <th>Horas cumplidas</th>
+                            <th>Horas deuda</th>
+                            <th>% cumplido</th>
+                            <th>% deuda</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {row.sprints.map((s) => (
+                            <tr key={s.number}>
+                              <td>{s.number}</td>
+                              <td>{s.start}</td>
+                              <td>{s.end}</td>
+                              <td>{s.expectedHours}</td>
+                              <td>{s.completedHours}</td>
+                              <td>{s.debtHours}</td>
+                              <td>{s.completedPercent}%</td>
+                              <td>{s.debtPercent}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
           {summary.length === 0 && (
             <tr>

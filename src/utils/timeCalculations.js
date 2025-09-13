@@ -12,6 +12,22 @@ function startOfDay(date) {
 }
 
 /**
+ * Adds a given number of business days (Mon-Fri) to a date.
+ */
+function addBusinessDays(start, days) {
+  const result = startOfDay(start);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 && day !== 6) {
+      added++;
+    }
+  }
+  return result;
+}
+
+/**
  * Cuenta días hábiles (lunes a viernes) entre dos fechas, inclusive.
  */
 function businessDaysBetween(start, end) {
@@ -78,4 +94,9 @@ function calculateElapsedAndDelay(start, due, today, original, completed) {
 
 
 
-export { WORK_HOURS_PER_DAY, businessDaysBetween, calculateElapsedAndDelay };
+export {
+  WORK_HOURS_PER_DAY,
+  businessDaysBetween,
+  calculateElapsedAndDelay,
+  addBusinessDays,
+};
