@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceDot,
 } from "recharts";
 import { businessDaysBetween } from "../utils/timeCalculations";
 
@@ -24,9 +25,42 @@ function addBusinessDays(start, days) {
   return date;
 }
 
-export default function SprintBurndownChart({ tasks, sprintDays }) {
-  const { points, delay } = useMemo(() => {
-    if (!tasks || tasks.length === 0) return { points: [], delay: 0 };
+function CustomTooltip({ active, payload, label, sprintName }) {
+  if (!active || !payload || !payload.length) return null;
+
+  const baseline = payload[0].payload.baseline;
+  const projected = payload[0].payload.projected;
+  let status = null;
+  if (baseline != null && projected != null) {
+    const diff = projected - baseline;
+    if (diff > 0) status = `⚠️ Delay: +${diff.toFixed(1)}h`;
+    else if (diff < 0) status = `Ahead: ${diff.toFixed(1)}h`;
+    else status = "On track";
+  }
+
+  return (
+    <div className="bg-white border p-2">
+      <p className="mb-1">Date: {label}</p>
+      {sprintName && <p className="mb-1">Sprint: {sprintName}</p>}
+      {payload.map((entry) => (
+        <p key={entry.dataKey} className="mb-1" style={{ color: entry.color }}>
+          {entry.name}: {entry.value}h
+        </p>
+      ))}
+      {status && <p className="fw-bold mb-0">{status}</p>}
+    </div>
+  );
+}
+
+export default function SprintBurndownChart({
+  tasks,
+  sprintDays,
+  sprintName,
+  initialBaseline,
+}) {
+  const { points, delay, breakingPoint } = useMemo(() => {
+    if (!tasks || tasks.length === 0)
+      return { points: [], delay: 0, breakingPoint: null };
 
     const parsed = tasks.map((t) => ({
       start: t["Start Date"] ? new Date(t["Start Date"]) : new Date(),
@@ -56,31 +90,52 @@ export default function SprintBurndownChart({ tasks, sprintDays }) {
       businessDaysBetween(startDate, today) - 1
     );
     const burnRate = daysElapsed > 0 ? totalCompleted / daysElapsed : 0;
+    const baselineTotal =
+      initialBaseline ?? totalOriginal; /* Baseline can be fetched from backend */
     const remaining = Math.max(totalOriginal - totalCompleted, 0);
-    const projectedDays = burnRate > 0 ? Math.ceil(remaining / burnRate) : 0;
+    const velocity = burnRate > 0 ? burnRate : totalOriginal / totalDays; // fallback linear regression
+    const projectedDays = Math.ceil(remaining / velocity);
     const projectedTotalDays = daysElapsed + projectedDays;
     const maxDays = Math.max(totalDays, projectedTotalDays, daysElapsed);
 
     const pts = [];
+    let breakingIndex = null;
     for (let i = 0; i <= maxDays; i++) {
       const date = addBusinessDays(startDate, i);
       const ideal =
         i <= totalDays
           ? totalOriginal - (totalOriginal / totalDays) * i
           : null;
-      const projected =
-        burnRate > 0 ? Math.max(totalOriginal - burnRate * i, 0) : null;
-      pts.push({ day: date.toLocaleDateString(), ideal, projected });
+      const baseline =
+        i <= totalDays
+          ? baselineTotal - (baselineTotal / totalDays) * i
+          : null;
+      const projected = Math.max(totalOriginal - velocity * i, 0);
+      if (
+        breakingIndex === null &&
+        projected != null &&
+        baseline != null &&
+        projected > baseline
+      ) {
+        breakingIndex = i;
+      }
+      pts.push({
+        day: date.toLocaleDateString(),
+        ideal,
+        projected,
+        baseline,
+      });
     }
 
     const delayDays = Math.max(0, projectedTotalDays - totalDays);
-    return { points: pts, delay: delayDays };
-  }, [tasks, sprintDays]);
+    const breakingPoint = breakingIndex !== null ? pts[breakingIndex] : null;
+    return { points: pts, delay: delayDays, breakingPoint };
+  }, [tasks, sprintDays, initialBaseline]);
 
   if (!points.length) return null;
 
-    return (
-      <div className="card bg-white text-dark mt-4">
+  return (
+    <div className="card bg-white text-dark mt-4">
       <div className="card-body">
         <h5 className="card-title mb-4">Burndown Chart</h5>
         <ResponsiveContainer width="100%" height={300}>
@@ -88,10 +143,35 @@ export default function SprintBurndownChart({ tasks, sprintDays }) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="day" />
             <YAxis allowDecimals={false} />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip sprintName={sprintName} />} />
             <Legend />
-            <Line type="monotone" dataKey="ideal" stroke="#0d6efd" name="Ideal Burndown" />
-            <Line type="monotone" dataKey="projected" stroke="#dc3545" name="Projected Burndown" />
+            <Line
+              type="monotone"
+              dataKey="ideal"
+              stroke="#0d6efd"
+              name="Ideal"
+            />
+            <Line
+              type="monotone"
+              dataKey="projected"
+              stroke="#dc3545"
+              name="Projected"
+            />
+            <Line
+              type="monotone"
+              dataKey="baseline"
+              stroke="#198754"
+              name="Baseline"
+            />
+            {breakingPoint && (
+              <ReferenceDot
+                x={breakingPoint.day}
+                y={breakingPoint.projected}
+                r={6}
+                fill="#ffc107"
+                stroke="#dc3545"
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
         {delay > 0 && (
