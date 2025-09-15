@@ -8,8 +8,8 @@ body {
   bottom: 0;
   left: 0;
   width: 14rem;
-  background-color: #212529;
-  color: #f8f9fa;
+  background-color: #fff;
+  color: #212529;
   padding: 1rem;
   overflow-y: auto;
 }

@@ -14,9 +14,9 @@ export default function App() {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
-    <div className="bg-dark text-light min-vh-100">
+    <div className="bg-light text-dark min-vh-100">
       {/* Top navbar */}
-      <nav className="navbar navbar-dark bg-dark shadow fixed-top">
+      <nav className="navbar navbar-light bg-white border-bottom shadow fixed-top">
         <div className="container-fluid">
           {isAuthenticated && (
             <button
@@ -49,12 +49,12 @@ export default function App() {
       {/* Sidebar */}
       {isAuthenticated && (
         <aside
-          className={`sidebar ${sidebarOpen ? "" : "d-none"} d-md-block bg-dark`}
+          className={`sidebar ${sidebarOpen ? "" : "d-none"} d-md-block bg-white`}
         >
           <nav className="nav flex-column">
             <Link
               to="/"
-              className={`nav-link text-light ${
+              className={`nav-link text-dark ${
                 location.pathname === "/" ? "active" : ""
               }`}
               onClick={() => setSidebarOpen(false)}

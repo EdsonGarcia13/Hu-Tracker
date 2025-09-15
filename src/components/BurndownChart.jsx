@@ -38,8 +38,8 @@ export default function BurndownChart({ burndownData, initiative }) {
 
   if (data.length === 0) return null;
 
-  return (
-    <div className="card bg-dark text-light mt-4">
+    return (
+      <div className="card bg-white text-dark mt-4">
       <div className="card-body">
         <h5 className="card-title mb-4">
           Avance por HU — {initiative || "General"}

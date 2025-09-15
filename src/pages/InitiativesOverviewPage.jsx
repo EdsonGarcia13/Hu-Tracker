@@ -178,6 +178,17 @@ export default function InitiativesOverviewPage() {
     });
   }, [initiatives]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(summary.length / itemsPerPage);
+  const paginatedSummary = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return summary.slice(start, start + itemsPerPage);
+  }, [summary, currentPage]);
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages || 1);
+  }, [totalPages, currentPage]);
+
   const handleAddInitiative = () => {
     if (!newIni.name) return;
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -220,7 +231,7 @@ export default function InitiativesOverviewPage() {
       <h2 className="mb-4">📈 Resumen por Iniciativa</h2>
 
       {/* Formulario para nueva iniciativa */}
-      <div className="card bg-dark text-light mb-4">
+      <div className="card bg-white text-dark mb-4">
         <div className="card-body">
           <h5 className="card-title mb-4">Agregar Nueva Iniciativa</h5>
           <div className="row g-3">
@@ -285,11 +296,11 @@ export default function InitiativesOverviewPage() {
 
       {/* Listado de iniciativas */}
       <div className="d-flex flex-column gap-4">
-        {summary.map((row) => (
-          <div key={row.id} className="card bg-dark text-light">
+        {paginatedSummary.map((row) => (
+          <div key={row.id} className="card bg-white text-dark">
             <div className="card-body">
               <div className="table-responsive">
-                <table className="table table-dark table-striped table-sm align-middle">
+                <table className="table table-striped table-sm align-middle">
                   <thead>
                     <tr>
                       <th className="text-start">Initiative</th>
@@ -384,7 +395,7 @@ export default function InitiativesOverviewPage() {
                     Estimado teórico: {row.totalSprints} sprints, {row.expectedPercentPerSprint}% por sprint
                   </div>
                   <div className="table-responsive">
-                    <table className="table table-dark table-striped table-sm align-middle">
+                      <table className="table table-striped table-sm align-middle">
                       <thead>
                         <tr>
                           <th>#</th>
@@ -451,6 +462,45 @@ export default function InitiativesOverviewPage() {
           <div className="text-center text-muted">
             No hay iniciativas, agrega una arriba.
           </div>
+        )}
+        {totalPages > 1 && summary.length > 0 && (
+          <nav className="mt-3">
+            <ul className="pagination pagination-sm mb-0">
+              <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  Anterior
+                </button>
+              </li>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <li
+                  key={i}
+                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link"
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                </li>
+              ))}
+              <li
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Siguiente
+                </button>
+              </li>
+            </ul>
+          </nav>
         )}
       </div>
     </div>

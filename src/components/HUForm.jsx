@@ -9,8 +9,8 @@ export default function HUForm({
   maxEnd,
   sprintLimit,
 }) {
-  return (
-    <div className="card bg-dark text-light mb-4">
+    return (
+      <div className="card bg-white text-dark mb-4">
       <div className="card-body">
         <h5 className="card-title mb-4">Agregar Historia de Usuario</h5>
         <div className="row g-3">
