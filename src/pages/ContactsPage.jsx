@@ -1,5 +1,6 @@
 // src/pages/ContactsPage.jsx
 import React, { useState } from "react";
+import "./ContactsPage.css";
 
 const initialContacts = [
   {
@@ -64,10 +65,10 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
   return (
     <div className="card shadow-sm">
       <div className="card-body">
-        <h2 className="h5 mb-4">
+        <h2 className="contacts-section-title mb-4">
           {isEditing ? "Editar contacto" : "Agregar nuevo contacto"}
         </h2>
-        <form className="row g-3" onSubmit={onSubmit}>
+        <form className="row g-3 contacts-form" onSubmit={onSubmit}>
           <div className="col-md-6">
             <label htmlFor="name" className="form-label">
               Nombre
@@ -147,13 +148,13 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
             {isEditing && (
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-secondary contacts-cancel"
                 onClick={onCancel}
               >
                 Cancelar
               </button>
             )}
-            <button type="submit" className="btn btn-success">
+            <button type="submit" className="btn btn-save">
               {isEditing ? "Actualizar contacto" : "Guardar contacto"}
             </button>
           </div>
@@ -167,9 +168,9 @@ function ContactsTable({ contacts, onEdit, onDelete }) {
   return (
     <div className="card shadow-sm">
       <div className="card-body">
-        <h2 className="h5 mb-4">Contactos registrados</h2>
+        <h2 className="contacts-section-title mb-4">Contactos registrados</h2>
         <div className="table-responsive">
-          <table className="table table-hover align-middle">
+          <table className="table align-middle contacts-table">
             <thead className="table-light">
               <tr>
                 <th scope="col">Nombre</th>
@@ -194,7 +195,7 @@ function ContactsTable({ contacts, onEdit, onDelete }) {
                   <tr key={`${contact.email}-${index}`}>
                     <td className="fw-semibold">{contact.name}</td>
                     <td>
-                      <span className="badge text-bg-primary-subtle text-primary-emphasis">
+                      <span className="contacts-team-badge">
                         {contact.team}
                       </span>
                     </td>
@@ -202,7 +203,7 @@ function ContactsTable({ contacts, onEdit, onDelete }) {
                     <td>
                       <a
                         href={`mailto:${contact.email}`}
-                        className="link-primary text-decoration-none"
+                        className="contact-email"
                       >
                         {contact.email}
                       </a>
@@ -212,23 +213,23 @@ function ContactsTable({ contacts, onEdit, onDelete }) {
                         href={`https://wa.me/${contact.cellphone}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="link-success fw-semibold text-decoration-none"
+                        className="contact-whatsapp"
                       >
                         {formatDisplayPhone(contact.cellphone)}
                       </a>
                     </td>
                     <td className="text-end">
-                      <div className="btn-group btn-group-sm" role="group">
+                      <div className="d-flex justify-content-end contacts-actions" role="group">
                         <button
                           type="button"
-                          className="btn btn-outline-primary"
+                          className="btn btn-edit"
                           onClick={() => onEdit(index)}
                         >
                           Editar
                         </button>
                         <button
                           type="button"
-                          className="btn btn-outline-danger"
+                          className="btn btn-delete"
                           onClick={() => onDelete(index)}
                         >
                           Eliminar
@@ -322,30 +323,32 @@ export default function ContactsPage() {
   };
 
   return (
-    <div className="container py-4">
-      <div className="mb-4">
-        <h1 className="display-6 fw-semibold">Contactos de Team Leads</h1>
-        <p className="text-muted mb-0">
-          Administra el directorio de contactos clave de tu organización.
-        </p>
-      </div>
-
-      <div className="row g-4">
-        <div className="col-12 col-xl-5">
-          <ContactForm
-            formData={formData}
-            isEditing={isEditing}
-            onChange={handleChange}
-            onSubmit={handleSubmit}
-            onCancel={resetForm}
-          />
+    <div className="contacts-page">
+      <div className="container contacts-container">
+        <div className="contacts-header">
+          <h1 className="contacts-title fw-semibold">Contactos de Team Leads</h1>
+          <p className="contacts-subtitle mb-0">
+            Administra el directorio de contactos clave de tu organización.
+          </p>
         </div>
-        <div className="col-12 col-xl-7">
-          <ContactsTable
-            contacts={contacts}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+
+        <div className="row g-4 contacts-content-row">
+          <div className="col-12 col-xl-5 contacts-column">
+            <ContactForm
+              formData={formData}
+              isEditing={isEditing}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+              onCancel={resetForm}
+            />
+          </div>
+          <div className="col-12 col-xl-7 contacts-column">
+            <ContactsTable
+              contacts={contacts}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </div>
         </div>
       </div>
     </div>
