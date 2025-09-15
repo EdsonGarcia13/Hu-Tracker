@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const HUTrackerPage = lazy(() => import("./pages/HUTrackerPage"));
 const InitiativesOverviewPage = lazy(() => import("./pages/InitiativesOverviewPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
+const ContactsPage = lazy(() => import("./pages/ContactsPage"));
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <InitiativesOverviewPage /> },
           { path: "initiatives/:id", element: <HUTrackerPage /> },
+          { path: "contacts", element: <ContactsPage /> },
         ],
       },
     ],
