@@ -79,8 +79,8 @@ export default function SprintBurndownChart({ tasks, sprintDays }) {
 
   if (!points.length) return null;
 
-  return (
-    <div className="card bg-dark text-light mt-4">
+    return (
+      <div className="card bg-white text-dark mt-4">
       <div className="card-body">
         <h5 className="card-title mb-4">Burndown Chart</h5>
         <ResponsiveContainer width="100%" height={300}>
