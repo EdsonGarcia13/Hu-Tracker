@@ -294,8 +294,8 @@ export default function InitiativesOverviewPage() {
     </div>
 
     <div className="table-responsive">
-      <table className="table table-hover align-middle">
-        <thead className="table-light">
+      <table className="table table-hover align-middle table-modern">
+        <thead>
           <tr>
             <th>Initiative</th>
             <th>Start Date</th>
@@ -356,25 +356,27 @@ export default function InitiativesOverviewPage() {
                 </td>
                 <td>{row.totalHU}</td>
                 <td>{row.original}</td>
-                <td>{row.completed}</td>
+                <td>
+                  <span className="badge badge-hours">{row.completed}</span>
+                </td>
                 <td>{row.remaining}</td>
                 <td>{row.projectedDelay}</td>
                 <td>
                   {row.hasDelay ? (
-                    <span className="badge bg-danger">Con retrasos</span>
+                    <span className="badge badge-status-delay">Con retrasos</span>
                   ) : (
-                    <span className="badge bg-success">En tiempo</span>
+                    <span className="badge badge-status-ontime">En tiempo</span>
                   )}
                 </td>
                 <td className="d-flex gap-2">
                   <Link
                     to={`/initiatives/${row.id}`}
-                    className="btn btn-sm btn-outline-primary"
+                    className="btn btn-sm btn-view"
                   >
                     Ver HU
                   </Link>
                   <button
-                    className="btn btn-sm btn-danger"
+                    className="btn btn-sm btn-delete"
                     onClick={() => handleDeleteById(row.id)}
                   >
                     🗑
@@ -389,7 +391,7 @@ export default function InitiativesOverviewPage() {
                       % por sprint
                     </div>
                     <div className="table-responsive">
-                      <table className="table table-sm mb-0">
+                      <table className="table table-sm mb-0 table-modern">
                         <thead>
                           <tr>
                             <th>#</th>
@@ -411,10 +413,36 @@ export default function InitiativesOverviewPage() {
                               <td>{s.end}</td>
                               <td>{s.projectedEnd}</td>
                               <td>{s.expectedHours}</td>
-                              <td>{s.completedHours}</td>
+                              <td>
+                                <span className="badge badge-hours">{s.completedHours}</span>
+                              </td>
                               <td>{s.debtHours}</td>
-                              <td>{s.completedPercent}%</td>
-                              <td>{s.debtPercent}%</td>
+                              <td>
+                                <div className="d-flex align-items-center gap-2">
+                                  <div className="progress flex-grow-1">
+                                    <div
+                                      className="progress-bar completed"
+                                      style={{ width: `${s.completedPercent}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="small fw-semibold">
+                                    {s.completedPercent}%
+                                  </span>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="d-flex align-items-center gap-2">
+                                  <div className="progress flex-grow-1">
+                                    <div
+                                      className="progress-bar debt"
+                                      style={{ width: `${s.debtPercent}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="small fw-semibold">
+                                    {s.debtPercent}%
+                                  </span>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
