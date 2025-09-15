@@ -247,28 +247,28 @@ export default function HUTrackerPage() {
   const onDeleteHU = (index) => dispatch(removeHU(index));
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="m-0">
-          📊 Historias de Usuario —{" "}
-          <span className="text-primary">{selectedInitiative || "…"}</span>
+    <div className="p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">
+          📊 Historias de Usuario — {" "}
+          <span className="text-blue-500">{selectedInitiative || "…"}</span>
         </h2>
         <nav>
-          <Link to="/" className="btn btn-outline-secondary">
+          <Link to="/" className="btn btn-outline">
             Volver a Iniciativas
           </Link>
         </nav>
       </div>
 
       {/* Upload Excel */}
-      <div className="mb-4">
-        <label className="form-label">
+      <div>
+        <label className="block mb-1 text-sm font-medium">
           Cargar Excel (se asigna a: {selectedInitiative || "—"})
         </label>
         <input
           type="file"
           accept=".xlsx,.xls"
-          className="form-control"
+          className="bg-slate-900 border border-slate-700 rounded px-2 py-1 w-full"
           onChange={handleFileUpload}
         />
       </div>

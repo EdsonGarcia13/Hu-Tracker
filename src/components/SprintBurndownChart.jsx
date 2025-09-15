@@ -80,10 +80,9 @@ export default function SprintBurndownChart({ tasks, sprintDays }) {
   if (!points.length) return null;
 
   return (
-    <div className="card shadow-sm mt-4">
-      <div className="card-body">
-        <h5 className="card-title mb-3">Burndown Chart</h5>
-        <ResponsiveContainer width="100%" height={300}>
+    <div className="bg-slate-800 rounded-lg shadow p-4 mt-6">
+      <h5 className="text-lg font-semibold mb-4">Burndown Chart</h5>
+      <ResponsiveContainer width="100%" height={300}>
           <LineChart data={points}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="day" />
@@ -93,13 +92,12 @@ export default function SprintBurndownChart({ tasks, sprintDays }) {
             <Line type="monotone" dataKey="ideal" stroke="#0d6efd" name="Ideal Burndown" />
             <Line type="monotone" dataKey="projected" stroke="#dc3545" name="Projected Burndown" />
           </LineChart>
-        </ResponsiveContainer>
-        {delay > 0 && (
-          <p className="text-danger fw-bold mt-2">
-            Projected Delay: {delay} day(s)
-          </p>
-        )}
-      </div>
+      </ResponsiveContainer>
+      {delay > 0 && (
+        <p className="text-red-500 font-bold mt-2">
+          Projected Delay: {delay} day(s)
+        </p>
+      )}
     </div>
   );
 }

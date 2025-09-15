@@ -216,262 +216,236 @@ export default function InitiativesOverviewPage() {
   };
 
   return (
-    <div className="container-fluid">
-      <h2 className="mb-4">📈 Resumen por Iniciativa</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">📈 Resumen por Iniciativa</h2>
 
       {/* Formulario para nueva iniciativa */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <h5 className="card-title mb-3">Agregar Nueva Iniciativa</h5>
-          <div className="row g-2 align-items-end">
-            <div className="col-md-3">
-              <label htmlFor="new-ini-name" className="form-label">
-                Nombre
-              </label>
-              <input
-                id="new-ini-name"
-                type="text"
-                className="form-control"
-                value={newIni.name}
-                onChange={(e) => setNewIni({ ...newIni, name: e.target.value })}
-              />
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="new-ini-start" className="form-label">
-                Fecha inicio
-              </label>
-              <input
-                id="new-ini-start"
-                type="date"
-                className="form-control"
-                min={new Date().toISOString().slice(0, 10)}
-                value={newIni.startDate}
-                onChange={(e) => setNewIni({ ...newIni, startDate: e.target.value })}
-              />
-            </div>
-            <div className="col-md-3">
-              <label htmlFor="new-ini-due" className="form-label">
-                Fecha fin
-              </label>
-              <input
-                id="new-ini-due"
-                type="date"
-                className="form-control"
-                min={newIni.startDate || new Date().toISOString().slice(0, 10)}
-                value={newIni.dueDate}
-                onChange={(e) => setNewIni({ ...newIni, dueDate: e.target.value })}
-              />
-            </div>
-            <div className="col-md-2">
-              <label htmlFor="new-ini-sprint" className="form-label">
-                Días sprint
-              </label>
-              <input
-                id="new-ini-sprint"
-                type="number"
-                className="form-control"
-                value={newIni.sprintDays}
-                onChange={(e) =>
-                  setNewIni({ ...newIni, sprintDays: e.target.value })
-                }
-              />
-            </div>
-            <div className="col-md-1">
-              <button className="btn btn-primary w-100" onClick={handleAddInitiative}>
-                Agregar
-              </button>
-            </div>
+      <div className="bg-slate-800 rounded-lg shadow p-4">
+        <h5 className="text-lg font-semibold mb-4">Agregar Nueva Iniciativa</h5>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="flex flex-col">
+            <label htmlFor="new-ini-name" className="text-sm mb-1">
+              Nombre
+            </label>
+            <input
+              id="new-ini-name"
+              type="text"
+              className="bg-slate-900 border border-slate-700 rounded px-2 py-1"
+              value={newIni.name}
+              onChange={(e) => setNewIni({ ...newIni, name: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="new-ini-start" className="text-sm mb-1">
+              Fecha inicio
+            </label>
+            <input
+              id="new-ini-start"
+              type="date"
+              className="bg-slate-900 border border-slate-700 rounded px-2 py-1"
+              min={new Date().toISOString().slice(0, 10)}
+              value={newIni.startDate}
+              onChange={(e) => setNewIni({ ...newIni, startDate: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="new-ini-due" className="text-sm mb-1">
+              Fecha fin
+            </label>
+            <input
+              id="new-ini-due"
+              type="date"
+              className="bg-slate-900 border border-slate-700 rounded px-2 py-1"
+              min={newIni.startDate || new Date().toISOString().slice(0, 10)}
+              value={newIni.dueDate}
+              onChange={(e) => setNewIni({ ...newIni, dueDate: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="new-ini-sprint" className="text-sm mb-1">
+              Días sprint
+            </label>
+            <input
+              id="new-ini-sprint"
+              type="number"
+              className="bg-slate-900 border border-slate-700 rounded px-2 py-1"
+              value={newIni.sprintDays}
+              onChange={(e) => setNewIni({ ...newIni, sprintDays: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col justify-end">
+            <button className="btn btn-primary w-full" onClick={handleAddInitiative}>
+              Agregar
+            </button>
           </div>
         </div>
       </div>
 
-     {/* Tabla de iniciativas */}
-<div className="card shadow-sm">
-  <div className="card-body">
-    {/* Header con título (izquierda) */}
-    <div className="d-flex justify-content-between align-items-center mb-3">
-      <h5 className="card-title m-0">Listado de Iniciativas</h5>
-    </div>
+      {/* Listado de iniciativas */}
+      <div className="space-y-6">
+        {summary.map((row) => (
+          <div key={row.id} className="bg-slate-800 rounded-lg shadow p-4">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-slate-700 text-slate-300">
+                  <tr>
+                    <th className="px-2 py-1 text-left">Initiative</th>
+                    <th className="px-2 py-1">Start Date</th>
+                    <th className="px-2 py-1">Due Date</th>
+                    <th className="px-2 py-1">Sprint Days</th>
+                    <th className="px-2 py-1">Historias</th>
+                    <th className="px-2 py-1">Original</th>
+                    <th className="px-2 py-1">Completed</th>
+                    <th className="px-2 py-1">Remaining</th>
+                    <th className="px-2 py-1">Projected Delay</th>
+                    <th className="px-2 py-1">Status</th>
+                    <th className="px-2 py-1">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-slate-900">
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        value={row.name}
+                        onChange={(e) => handleEditById(row.id, "name", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="date"
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        value={row.startDate || ""}
+                        onChange={(e) => handleEditById(row.id, "startDate", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="date"
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        value={row.dueDate || ""}
+                        onChange={(e) => handleEditById(row.id, "dueDate", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2">
+                      <input
+                        type="number"
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                        value={row.sprintDays || ""}
+                        onChange={(e) => handleEditById(row.id, "sprintDays", e.target.value)}
+                      />
+                    </td>
+                    <td className="p-2">{row.totalHU}</td>
+                    <td className="p-2">{row.original}</td>
+                    <td className="p-2">
+                      <span className="badge-hours">{row.completed}</span>
+                    </td>
+                    <td className="p-2">{row.remaining}</td>
+                    <td className="p-2">{row.projectedDelay}</td>
+                    <td className="p-2">
+                      {row.hasDelay ? (
+                        <span className="badge-status-delay">Con retrasos</span>
+                      ) : (
+                        <span className="badge-status-ontime">En tiempo</span>
+                      )}
+                    </td>
+                    <td className="p-2 flex gap-2">
+                      <Link
+                        to={`/initiatives/${row.id}`}
+                        className="btn btn-primary text-xs"
+                      >
+                        Ver HU
+                      </Link>
+                      <button
+                        className="btn btn-danger text-xs"
+                        onClick={() => handleDeleteById(row.id)}
+                      >
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-    <div className="table-responsive">
-      <table className="table table-hover align-middle table-modern">
-        <thead>
-          <tr>
-            <th>Initiative</th>
-            <th>Start Date</th>
-            <th>Due Date</th>
-            <th>Sprint Days</th>
-            <th>Historias</th>
-            <th>Original (hrs)</th>
-            <th>Completed (hrs)</th>
-            <th>Remaining (hrs)</th>
-            <th>Projected Delay (days)</th>
-            <th>Status</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {summary.map((row) => (
-            <React.Fragment key={row.id}>
-              <tr>
-                <td>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={row.name}
-                    onChange={(e) =>
-                      handleEditById(row.id, "name", e.target.value)
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    type="date"
-                    className="form-control form-control-sm"
-                    value={row.startDate || ""}
-                    onChange={(e) =>
-                      handleEditById(row.id, "startDate", e.target.value)
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    type="date"
-                    className="form-control form-control-sm"
-                    value={row.dueDate || ""}
-                    onChange={(e) =>
-                      handleEditById(row.id, "dueDate", e.target.value)
-                    }
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    className="form-control form-control-sm"
-                    value={row.sprintDays || ""}
-                    onChange={(e) =>
-                      handleEditById(row.id, "sprintDays", e.target.value)
-                    }
-                  />
-                </td>
-                <td>{row.totalHU}</td>
-                <td>{row.original}</td>
-                <td>
-                  <span className="badge badge-hours">{row.completed}</span>
-                </td>
-                <td>{row.remaining}</td>
-                <td>{row.projectedDelay}</td>
-                <td>
-                  {row.hasDelay ? (
-                    <span className="badge badge-status-delay">Con retrasos</span>
-                  ) : (
-                    <span className="badge badge-status-ontime">En tiempo</span>
-                  )}
-                </td>
-                <td className="d-flex gap-2">
-                  <Link
-                    to={`/initiatives/${row.id}`}
-                    className="btn btn-sm btn-view"
-                  >
-                    Ver HU
-                  </Link>
-                  <button
-                    className="btn btn-sm btn-delete"
-                    onClick={() => handleDeleteById(row.id)}
-                  >
-                    🗑
-                  </button>
-                </td>
-              </tr>
-              {row.totalSprints > 0 && (
-                <tr className="table-secondary">
-                  <td colSpan="11">
-                    <div>
-                      Estimado teórico: {row.totalSprints} sprints, {row.expectedPercentPerSprint}
-                      % por sprint
-                    </div>
-                    <div className="table-responsive">
-                      <table className="table table-sm mb-0 table-modern">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Inicio</th>
-                            <th>Fin</th>
-                            <th>Proyección fin</th>
-                            <th>Horas estimadas</th>
-                            <th>Horas cumplidas</th>
-                            <th>Horas deuda</th>
-                            <th>% cumplido</th>
-                            <th>% deuda</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {row.sprints.map((s) => (
-                            <tr key={s.number}>
-                              <td>{s.number}</td>
-                              <td>{s.start}</td>
-                              <td>{s.end}</td>
-                              <td>{s.projectedEnd}</td>
-                              <td>{s.expectedHours}</td>
-                              <td>
-                                <span className="badge badge-hours">{s.completedHours}</span>
-                              </td>
-                              <td>{s.debtHours}</td>
-                              <td>
-                                <div className="d-flex align-items-center gap-2">
-                                  <div className="progress flex-grow-1">
-                                    <div
-                                      className="progress-bar completed"
-                                      style={{ width: `${s.completedPercent}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="small fw-semibold">
-                                    {s.completedPercent}%
-                                  </span>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="d-flex align-items-center gap-2">
-                                  <div className="progress flex-grow-1">
-                                    <div
-                                      className="progress-bar debt"
-                                      style={{ width: `${s.debtPercent}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="small fw-semibold">
-                                    {s.debtPercent}%
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="mt-2">
-                      <strong>Total estimado del proyecto:</strong> {row.original}h / {row.totalDays}{" "}
-                      días
-                      <br />
-                      <strong>Porcentaje general:</strong> {row.completionPercent}%
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-          {summary.length === 0 && (
-            <tr>
-              <td colSpan="11" className="text-center text-muted">
-                No hay iniciativas, agrega una arriba.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
+            {row.totalSprints > 0 && (
+              <div className="mt-4 text-sm">
+                <div className="mb-2">
+                  Estimado teórico: {row.totalSprints} sprints, {row.expectedPercentPerSprint}% por sprint
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-xs">
+                    <thead className="bg-slate-700 text-slate-300">
+                      <tr>
+                        <th className="px-2 py-1">#</th>
+                        <th className="px-2 py-1">Inicio</th>
+                        <th className="px-2 py-1">Fin</th>
+                        <th className="px-2 py-1">Proyección fin</th>
+                        <th className="px-2 py-1">Horas estimadas</th>
+                        <th className="px-2 py-1">Horas cumplidas</th>
+                        <th className="px-2 py-1">Horas deuda</th>
+                        <th className="px-2 py-1">% cumplido</th>
+                        <th className="px-2 py-1">% deuda</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.sprints.map((s) => (
+                        <tr
+                          key={s.number}
+                          className="odd:bg-slate-800 even:bg-slate-900"
+                        >
+                          <td className="px-2 py-1">{s.number}</td>
+                          <td className="px-2 py-1">{s.start}</td>
+                          <td className="px-2 py-1">{s.end}</td>
+                          <td className="px-2 py-1">{s.projectedEnd}</td>
+                          <td className="px-2 py-1">{s.expectedHours}</td>
+                          <td className="px-2 py-1">
+                            <span className="badge-hours">{s.completedHours}</span>
+                          </td>
+                          <td className="px-2 py-1">{s.debtHours}</td>
+                          <td className="px-2 py-1">
+                            <div className="flex items-center gap-2">
+                              <div className="progress-container">
+                                <div
+                                  className="progress-completed"
+                                  style={{ width: `${s.completedPercent}%` }}
+                                ></div>
+                              </div>
+                              <span>{s.completedPercent}%</span>
+                            </div>
+                          </td>
+                          <td className="px-2 py-1">
+                            <div className="flex items-center gap-2">
+                              <div className="progress-container">
+                                <div
+                                  className="progress-debt"
+                                  style={{ width: `${s.debtPercent}%` }}
+                                ></div>
+                              </div>
+                              <span>{s.debtPercent}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-2">
+                  <strong>Total estimado del proyecto:</strong> {row.original}h / {row.totalDays} días
+                  <br />
+                  <strong>Porcentaje general:</strong> {row.completionPercent}%
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {summary.length === 0 && (
+          <div className="text-center text-slate-400">
+            No hay iniciativas, agrega una arriba.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -14,24 +14,24 @@ export default function App() {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-900 text-slate-100">
       {/* Top navbar */}
-      <nav className="navbar navbar-expand bg-white shadow-sm fixed-top">
-        <div className="container-fluid">
+      <nav className="fixed top-0 inset-x-0 bg-slate-800 shadow z-10">
+        <div className="px-4 py-3 flex items-center">
           {isAuthenticated && (
             <button
-              className="btn btn-outline-primary d-md-none"
+              className="btn btn-outline md:hidden mr-2"
               onClick={toggleSidebar}
             >
               ☰
             </button>
           )}
-          <Link className="navbar-brand ms-2" to="/">
+          <Link to="/" className="font-semibold text-lg">
             HU Tracker
           </Link>
-          <div className="ms-auto">
+          <div className="ml-auto">
             {isAuthenticated ? (
-              <button className="btn btn-outline-secondary" onClick={handleLogout}>
+              <button className="btn btn-outline" onClick={handleLogout}>
                 Logout
               </button>
             ) : (
@@ -45,24 +45,26 @@ export default function App() {
 
       {/* Sidebar */}
       {isAuthenticated && (
-        <aside className={`sidebar ${sidebarOpen ? "show" : ""}`}>
-          <ul className="nav flex-column px-3">
-            <li className="nav-item">
-              <Link
-                to="/"
-                className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
-              >
-                Iniciativas
-              </Link>
-            </li>
-          </ul>
+        <aside
+          className={`fixed inset-y-0 left-0 w-56 bg-slate-800 p-4 transform transition-transform md:translate-x-0 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:static md:block`}
+        >
+          <nav className="space-y-2">
+            <Link
+              to="/"
+              className={`block rounded px-3 py-2 hover:bg-slate-700 ${
+                location.pathname === "/" ? "bg-slate-700" : ""
+              }`}
+            >
+              Iniciativas
+            </Link>
+          </nav>
         </aside>
       )}
 
       {/* Main content */}
-      <main
-        className={`content-wrapper ${isAuthenticated ? "sidebar-active" : ""}`}
-      >
+      <main className={`pt-16 p-4 ${isAuthenticated ? "md:ml-56" : ""}`}>
         <Outlet />
       </main>
     </div>

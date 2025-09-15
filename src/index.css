@@ -1,182 +1,46 @@
-/* Global light theme for a clean dashboard look */
-body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #f5f5f9;
-  color: #495057;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Top navbar */
-.navbar {
-  border-bottom: 1px solid #e0e0e0;
-  z-index: 1030;
-}
-
-/* Sidebar layout */
-.sidebar {
-  width: 240px;
-  min-height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: #ffffff;
-  border-right: 1px solid #e0e0e0;
-  padding-top: 4.5rem;
-}
-
-.sidebar .nav-link {
-  color: #495057;
-  border-radius: 0.375rem;
-}
-
-.sidebar .nav-link.active,
-.sidebar .nav-link:hover {
-  background-color: #e7f1ff;
-  color: #0d6efd;
-}
-
-.content-wrapper {
-  padding: 5rem 1.5rem 1.5rem;
-  min-height: 100vh;
-  background-color: #f5f5f9;
-}
-
-.sidebar-active {
-  margin-left: 240px;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    left: -240px;
-    transition: left 0.3s ease;
-  }
-  .sidebar.show {
-    left: 0;
-  }
-  .sidebar-active {
-    margin-left: 0;
+@layer base {
+  body {
+    @apply bg-slate-900 text-slate-100 font-sans;
+    font-family: "Inter", sans-serif;
   }
 }
 
-/* Cards and tables */
-.card {
-  border-radius: 0.5rem;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+/* Reusable button styles */
+.btn {
+  @apply inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors focus:outline-none;
+}
+.btn-primary {
+  @apply bg-blue-500 hover:bg-blue-600 text-white;
+}
+.btn-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white;
+}
+.btn-outline {
+  @apply border border-slate-500 text-slate-300 hover:bg-slate-700;
 }
 
-.table thead th {
-  background-color: #f8f9fa;
-}
-
-/* Status select colors */
-.status-select--todo {
-  background-color: #e9ecef;
-  color: #212529;
-}
-
-.status-select--inprogress {
-  background-color: #ffe08a;
-  color: #3a3a3a;
-}
-
-.status-select--done {
-  background-color: #198754;
-  color: #ffffff;
-}
-
-.status-select--todo:focus,
-.status-select--inprogress:focus,
-.status-select--done:focus {
-  color: inherit;
-}
-
-.status-select--todo,
-.status-select--inprogress,
-.status-select--done {
-  background-image: none;
-}
-
-/* HU table styling */
-.hu-table-card {
-  border-color: #cfe2ff;
-}
-
-.hu-table-card .table thead th {
-  background-color: #e7f1ff;
-  color: #0d6efd;
-}
-
-/* Modern table styling */
-.table-modern {
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.table-modern thead th {
-  background-color: #f9fafb;
-  font-weight: 600;
-}
-
-.table-modern tbody tr:nth-child(odd) {
-  background-color: #fcfcfd;
-}
-
-.table-modern tbody tr:hover {
-  background-color: #f1f5f9;
-}
-
-/* Status badges */
+/* Badges */
 .badge-status-delay {
-  background-color: #ff6b6b;
-  color: #fff;
+  @apply bg-red-500 text-white text-xs px-2 py-0.5 rounded;
 }
-
 .badge-status-ontime {
-  background-color: #51cf66;
-  color: #fff;
+  @apply bg-green-500 text-white text-xs px-2 py-0.5 rounded;
 }
-
-/* Metric badges */
 .badge-hours {
-  background-color: #0d6efd;
-  color: #fff;
+  @apply bg-blue-500 text-white text-xs px-2 py-0.5 rounded;
 }
 
 /* Progress bars */
-.progress {
-  height: 0.75rem;
-  background-color: #e9ecef;
+.progress-container {
+  @apply w-full bg-slate-700 rounded h-2;
 }
-
-.progress-bar.completed {
-  background-color: #198754;
+.progress-completed {
+  @apply bg-green-500 h-2 rounded;
 }
-
-.progress-bar.debt {
-  background-color: #dc3545;
-}
-
-/* Action buttons */
-.btn-view {
-  background-color: #0d6efd;
-  color: #fff;
-}
-
-.btn-delete {
-  color: #dc3545;
-  border: 1px solid #dc3545;
-  background-color: transparent;
-}
-
-.btn-delete:hover {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-@media (max-width: 576px) {
-  .table-responsive .table {
-    font-size: 0.875rem;
-  }
+.progress-debt {
+  @apply bg-red-500 h-2 rounded;
 }

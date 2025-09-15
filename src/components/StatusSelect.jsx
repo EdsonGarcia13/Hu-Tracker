@@ -4,24 +4,22 @@ import React from "react";
 export default function StatusSelect({
   value = "ToDo",
   onChange,
-  size = "sm",
   className = "",
   disabled = false,
 }) {
-  // Colores del propio <select>, SIN badge adicional
   const tone =
     value === "Done"
-      ? "status-select--done"
+      ? "bg-green-600 text-white"
       : value === "In Progress"
-      ? "status-select--inprogress"
-      : "status-select--todo";
+      ? "bg-yellow-400 text-slate-800"
+      : "bg-slate-600 text-white";
 
   return (
     <select
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`form-select form-select-${size} fw-semibold ${tone} ${className}`}
+      className={`rounded px-2 py-1 text-xs font-semibold ${tone} ${className}`}
       style={{ minWidth: 120 }}
     >
       <option value="ToDo">ToDo</option>

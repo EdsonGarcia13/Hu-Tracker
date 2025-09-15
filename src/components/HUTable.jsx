@@ -22,54 +22,53 @@ export default function HUTable({
   };
 
   return (
-    <div className="card shadow-sm hu-table-card">
-      <div className="card-body">
-        {/* Header con título y filtro sprint */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="card-title m-0">Listado de Historias de Usuario</h5>
-          {availableSprints?.length > 1 && (
-            <div className="d-flex align-items-center">
-              <label className="me-2 fw-bold">Sprint</label>
-              <select
-                className="form-select form-select-sm"
-                style={{ width: "auto" }}
-                value={selectedSprint}
-                onChange={(e) => setSelectedSprint(e.target.value)}
-              >
-                {availableSprints.map((s, idx) => (
-                  <option key={idx} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
+    <div className="bg-slate-800 rounded-lg shadow p-4">
+      {/* Header con título y filtro sprint */}
+      <div className="flex justify-between items-center mb-4">
+        <h5 className="text-lg font-semibold">Listado de Historias de Usuario</h5>
+        {availableSprints?.length > 1 && (
+          <div className="flex items-center gap-2">
+            <label className="font-semibold">Sprint</label>
+            <select
+              className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm"
+              style={{ width: "auto" }}
+              value={selectedSprint}
+              onChange={(e) => setSelectedSprint(e.target.value)}
+            >
+              {availableSprints.map((s, idx) => (
+                <option key={idx} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
 
-        {/* Tabla */}
-        <div className="table-responsive">
-          <table className="table table-striped table-hover align-middle">
-            <thead className="table-light ">
-              <tr>
-                <th style={{ minWidth: "200px" }}>Title</th>
-                <th>Status</th>
-                <th>Assigned To</th>
-                <th>Original Estimate</th>
-                <th>Remaining</th>
-                <th>Completed</th>
-                <th>Sprint</th>
-                <th>Start Date</th>
-                <th>Due Date</th>
-                <th>Elapsed (days)</th>
-                <th>Delay (hrs)</th>
-                <th>Delay (days)</th>
-                <th>Deviation</th>
-                <th>Extra</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row, idx) => {
+      {/* Tabla */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm text-left">
+          <thead className="bg-slate-700 text-slate-300">
+            <tr>
+              <th className="px-2 py-1" style={{ minWidth: "200px" }}>Title</th>
+              <th className="px-2 py-1">Status</th>
+              <th className="px-2 py-1">Assigned To</th>
+              <th className="px-2 py-1">Original Estimate</th>
+              <th className="px-2 py-1">Remaining</th>
+              <th className="px-2 py-1">Completed</th>
+              <th className="px-2 py-1">Sprint</th>
+              <th className="px-2 py-1">Start Date</th>
+              <th className="px-2 py-1">Due Date</th>
+              <th className="px-2 py-1">Elapsed (days)</th>
+              <th className="px-2 py-1">Delay (hrs)</th>
+              <th className="px-2 py-1">Delay (days)</th>
+              <th className="px-2 py-1">Deviation</th>
+              <th className="px-2 py-1">Extra</th>
+              <th className="px-2 py-1">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, idx) => {
                 const effectiveToday =
                   row.State === "Done" &&
                   Number(row["Completed Work"]) >=
@@ -89,134 +88,117 @@ export default function HUTable({
                     Number(row["Completed Work"]) || 0
                   );
 
-                return (
-                  <tr
-                    key={idx}
-                    className={`${delayHours > 0 ? "table-danger" : ""} ${
-                      row.isAdditional ? "table-warning" : ""
-                    }`}
-                  >
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={row.Title || ""}
-                        onChange={(e) =>
-                          handleEdit(idx, "Title", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <StatusSelect
-                        value={row.State}
-                        onChange={(e) =>
-                          handleEdit(idx, "State", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={row["Assigned To"] || ""}
-                        onChange={(e) =>
-                          handleEdit(idx, "Assigned To", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        className="form-control form-control-sm"
-                        value={row["Original Estimate"] || ""}
-                        onChange={(e) =>
-                          handleEdit(idx, "Original Estimate", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>{row["Remaining Work"]}</td>
-                    <td>
-                      <input
-                        type="number"
-                        className="form-control form-control-sm"
-                        value={row["Completed Work"] || 0}
-                        onChange={(e) =>
-                          handleEdit(idx, "Completed Work", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min={1}
-                        max={sprintLimit || undefined}
-                        className="form-control form-control-sm"
-                        value={row.Sprint || ""}
-                        onChange={(e) =>
-                          handleEdit(idx, "Sprint", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        min={startLimit}
-                        max={endLimit || undefined}
-                        value={row["Start Date"] || ""}
-                        onChange={(e) =>
-                          handleEdit(idx, "Start Date", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        min={row["Start Date"] || startLimit}
-                        value={row["Due Date"] || ""}
-                        onChange={(e) =>
-                          handleEdit(idx, "Due Date", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td>{elapsedDays}</td>
-                    <td>{delayHours}</td>
-                    <td>{delayDays}</td>
-                    <td>
-                      <span
-                        className={`fw-bold ${
-                          getDeviation(
-                            row["Due Date"],
-                            row["Completed Work"],
-                            row["Original Estimate"]
-                          ) === "Retrasada"
-                            ? "text-danger"
-                            : "text-success"
-                        }`}
-                      >
-                        {getDeviation(
+              return (
+                <tr
+                  key={idx}
+                  className={`${delayHours > 0 ? "bg-red-900/20" : ""} ${
+                    row.isAdditional ? "bg-yellow-900/20" : ""
+                  }`}
+                >
+                  <td className="px-2 py-1">
+                    <input
+                      type="text"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      value={row.Title || ""}
+                      onChange={(e) => handleEdit(idx, "Title", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <StatusSelect
+                      value={row.State}
+                      onChange={(e) => handleEdit(idx, "State", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="text"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      value={row["Assigned To"] || ""}
+                      onChange={(e) => handleEdit(idx, "Assigned To", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="number"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      value={row["Original Estimate"] || ""}
+                      onChange={(e) => handleEdit(idx, "Original Estimate", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">{row["Remaining Work"]}</td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="number"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      value={row["Completed Work"] || 0}
+                      onChange={(e) => handleEdit(idx, "Completed Work", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={sprintLimit || undefined}
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      value={row.Sprint || ""}
+                      onChange={(e) => handleEdit(idx, "Sprint", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="date"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      min={startLimit}
+                      max={endLimit || undefined}
+                      value={row["Start Date"] || ""}
+                      onChange={(e) => handleEdit(idx, "Start Date", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="date"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1"
+                      min={row["Start Date"] || startLimit}
+                      value={row["Due Date"] || ""}
+                      onChange={(e) => handleEdit(idx, "Due Date", e.target.value)}
+                    />
+                  </td>
+                  <td className="px-2 py-1">{elapsedDays}</td>
+                  <td className="px-2 py-1">{delayHours}</td>
+                  <td className="px-2 py-1">{delayDays}</td>
+                  <td className="px-2 py-1">
+                    <span
+                      className={`${
+                        getDeviation(
                           row["Due Date"],
                           row["Completed Work"],
                           row["Original Estimate"]
-                        )}
-                      </span>
-                    </td>
-                    <td>{row.isAdditional ? "⚠️" : ""}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => onDelete(idx)}
-                      >
-                        🗑
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        ) === "Retrasada"
+                          ? "text-red-500"
+                          : "text-green-500"
+                      } font-bold`}
+                    >
+                      {getDeviation(
+                        row["Due Date"],
+                        row["Completed Work"],
+                        row["Original Estimate"]
+                      )}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1">{row.isAdditional ? "⚠️" : ""}</td>
+                  <td className="px-2 py-1">
+                    <button
+                      className="btn btn-danger text-xs"
+                      onClick={() => onDelete(idx)}
+                    >
+                      🗑
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
