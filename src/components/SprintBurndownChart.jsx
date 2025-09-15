@@ -30,6 +30,7 @@ function CustomTooltip({ active, payload, label, sprintName }) {
 
   const baseline = payload[0].payload.baseline;
   const projected = payload[0].payload.projected;
+  const worked = payload[0].payload.worked;
   let status = null;
   if (baseline != null && projected != null) {
     const diff = projected - baseline;
@@ -47,6 +48,9 @@ function CustomTooltip({ active, payload, label, sprintName }) {
           {entry.name}: {entry.value}h
         </p>
       ))}
+      {worked != null && (
+        <p className="mb-1">Worked: {worked}h</p>
+      )}
       {status && <p className="fw-bold mb-0">{status}</p>}
     </div>
   );
@@ -100,17 +104,16 @@ export default function SprintBurndownChart({
 
     const pts = [];
     let breakingIndex = null;
+    let prevProjected = totalOriginal;
     for (let i = 0; i <= maxDays; i++) {
       const date = addBusinessDays(startDate, i);
-      const ideal =
-        i <= totalDays
-          ? totalOriginal - (totalOriginal / totalDays) * i
-          : null;
       const baseline =
         i <= totalDays
           ? baselineTotal - (baselineTotal / totalDays) * i
           : null;
       const projected = Math.max(totalOriginal - velocity * i, 0);
+      const worked = Math.max(prevProjected - projected, 0);
+      prevProjected = projected;
       if (
         breakingIndex === null &&
         projected != null &&
@@ -121,9 +124,9 @@ export default function SprintBurndownChart({
       }
       pts.push({
         day: date.toLocaleDateString(),
-        ideal,
         projected,
         baseline,
+        worked,
       });
     }
 
@@ -145,12 +148,6 @@ export default function SprintBurndownChart({
             <YAxis allowDecimals={false} />
             <Tooltip content={<CustomTooltip sprintName={sprintName} />} />
             <Legend />
-            <Line
-              type="monotone"
-              dataKey="ideal"
-              stroke="#0d6efd"
-              name="Ideal"
-            />
             <Line
               type="monotone"
               dataKey="projected"
