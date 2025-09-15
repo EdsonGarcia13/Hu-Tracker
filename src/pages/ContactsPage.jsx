@@ -61,6 +61,13 @@ const formatDisplayPhone = (value) => {
   return `+${normalized}`;
 };
 
+const normalizeText = (value) =>
+  (value ?? "")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
 function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
   return (
     <div className="card shadow-sm">
@@ -164,11 +171,47 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
   );
 }
 
-function ContactsTable({ contacts, onEdit, onDelete }) {
+function ContactsTable({
+  filteredContacts,
+  onEdit,
+  onDelete,
+  searchValue,
+  onSearchChange,
+  onSearchSubmit,
+  isFiltering,
+  hasContacts,
+  activeSearchTerm,
+}) {
   return (
     <div className="card shadow-sm">
       <div className="card-body">
-        <h2 className="contacts-section-title mb-4">Contactos registrados</h2>
+        <div className="contacts-list-header">
+          <h2 className="contacts-section-title">Contactos registrados</h2>
+          <form
+            className="contacts-search"
+            onSubmit={onSearchSubmit}
+            role="search"
+          >
+            <label
+              className="visually-hidden"
+              htmlFor="contacts-search-input"
+            >
+              Buscar contacto por nombre
+            </label>
+            <input
+              id="contacts-search-input"
+              type="search"
+              className="form-control contacts-search-input"
+              placeholder="Buscar por nombre"
+              value={searchValue}
+              onChange={onSearchChange}
+              aria-label="Buscar contacto por nombre"
+            />
+            <button type="submit" className="btn contacts-search-button">
+              Buscar
+            </button>
+          </form>
+        </div>
         <div className="table-responsive">
           <table className="table align-middle contacts-table">
             <thead className="table-light">
@@ -184,15 +227,27 @@ function ContactsTable({ contacts, onEdit, onDelete }) {
               </tr>
             </thead>
             <tbody>
-              {contacts.length === 0 ? (
+              {filteredContacts.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center text-muted py-4">
-                    No hay contactos registrados todavía.
+                    {!hasContacts
+                      ? "No hay contactos registrados todavía."
+                      : isFiltering ? (
+                          <>
+                            No se encontraron contactos que coincidan con{" "}
+                            <span className="fw-semibold">
+                              “{activeSearchTerm}”
+                            </span>
+                            .
+                          </>
+                        ) : (
+                          "No hay contactos registrados todavía."
+                        )}
                   </td>
                 </tr>
               ) : (
-                contacts.map((contact, index) => (
-                  <tr key={`${contact.email}-${index}`}>
+                filteredContacts.map(({ contact, index: originalIndex }) => (
+                  <tr key={`${contact.email}-${originalIndex}`}>
                     <td className="fw-semibold">{contact.name}</td>
                     <td>
                       <span className="contacts-team-badge">
@@ -223,14 +278,14 @@ function ContactsTable({ contacts, onEdit, onDelete }) {
                         <button
                           type="button"
                           className="btn btn-edit"
-                          onClick={() => onEdit(index)}
+                          onClick={() => onEdit(originalIndex)}
                         >
                           Editar
                         </button>
                         <button
                           type="button"
                           className="btn btn-delete"
-                          onClick={() => onDelete(index)}
+                          onClick={() => onDelete(originalIndex)}
                         >
                           Eliminar
                         </button>
@@ -251,6 +306,8 @@ export default function ContactsPage() {
   const [contacts, setContacts] = useState(initialContacts);
   const [formData, setFormData] = useState(defaultFormState);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const isEditing = editingIndex !== null;
 
@@ -322,6 +379,37 @@ export default function ContactsPage() {
     });
   };
 
+  const handleSearchInputChange = (event) => {
+    const { value } = event.target;
+    setSearchQuery(value);
+    if (value.trim() === "") {
+      setSearchTerm("");
+    }
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    const trimmedQuery = searchQuery.trim();
+    setSearchTerm(trimmedQuery);
+    setSearchQuery(trimmedQuery);
+  };
+
+  const contactEntries = contacts.map((contact, index) => ({
+    contact,
+    index,
+  }));
+
+  const normalizedSearchTerm = normalizeText(searchTerm);
+  const filteredContacts =
+    normalizedSearchTerm === ""
+      ? contactEntries
+      : contactEntries.filter(({ contact }) =>
+          normalizeText(contact.name).includes(normalizedSearchTerm),
+        );
+  const isFiltering = normalizedSearchTerm !== "";
+
+  const hasContacts = contacts.length > 0;
+
   return (
     <div className="contacts-page">
       <div className="container contacts-container">
@@ -350,9 +438,15 @@ export default function ContactsPage() {
             aria-label="Listado de contactos registrados"
           >
             <ContactsTable
-              contacts={contacts}
+              filteredContacts={filteredContacts}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              searchValue={searchQuery}
+              onSearchChange={handleSearchInputChange}
+              onSearchSubmit={handleSearchSubmit}
+              isFiltering={isFiltering}
+              hasContacts={hasContacts}
+              activeSearchTerm={searchTerm}
             />
           </section>
         </div>
