@@ -300,7 +300,7 @@ export default function InitiativesOverviewPage() {
           <div key={row.id} className="card bg-white text-dark">
             <div className="card-body">
               <div className="table-responsive">
-                <table className="table table-striped table-sm align-middle">
+                <table className="table table-striped table-sm align-middle table-column-separator">
                   <thead>
                     <tr>
                       <th className="text-start">Initiative</th>
@@ -395,7 +395,7 @@ export default function InitiativesOverviewPage() {
                     Estimado teórico: {row.totalSprints} sprints, {row.expectedPercentPerSprint}% por sprint
                   </div>
                   <div className="table-responsive">
-                      <table className="table table-striped table-sm align-middle">
+                      <table className="table table-striped table-sm align-middle table-column-separator">
                       <thead>
                         <tr>
                           <th>#</th>
@@ -426,10 +426,10 @@ export default function InitiativesOverviewPage() {
                                 <div className="progress flex-grow-1" style={{ height: "0.5rem" }}>
                                   <div
                                     className="progress-bar bg-success"
-                                    style={{ width: `${s.completedPercent}%` }}
+                                    style={{ width: `${Math.min(s.completedPercent, 100)}%` }}
                                   ></div>
                                 </div>
-                                <span>{s.completedPercent}%</span>
+                                <span className="percent-label">{s.completedPercent}%</span>
                               </div>
                             </td>
                             <td>
@@ -437,10 +437,10 @@ export default function InitiativesOverviewPage() {
                                 <div className="progress flex-grow-1" style={{ height: "0.5rem" }}>
                                   <div
                                     className="progress-bar bg-danger"
-                                    style={{ width: `${s.debtPercent}%` }}
+                                    style={{ width: `${Math.min(s.debtPercent, 100)}%` }}
                                   ></div>
                                 </div>
-                                <span>{s.debtPercent}%</span>
+                                <span className="percent-label">{s.debtPercent}%</span>
                               </div>
                             </td>
                           </tr>
