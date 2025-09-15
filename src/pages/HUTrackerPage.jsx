@@ -300,6 +300,7 @@ export default function HUTrackerPage() {
       <SprintBurndownChart
         tasks={sprintFiltered}
         sprintDays={currentInitiative?.sprintDays}
+        sprintName={selectedSprint}
       />
 
       {/* Detalle por HU */}
