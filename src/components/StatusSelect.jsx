@@ -9,17 +9,17 @@ export default function StatusSelect({
 }) {
   const tone =
     value === "Done"
-      ? "bg-green-600 text-white"
+      ? "text-bg-success"
       : value === "In Progress"
-      ? "bg-yellow-400 text-slate-800"
-      : "bg-slate-600 text-white";
+      ? "text-bg-warning"
+      : "text-bg-secondary";
 
   return (
     <select
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`rounded px-2 py-1 text-xs font-semibold ${tone} ${className}`}
+      className={`${className} form-select form-select-sm ${tone}`}
       style={{ minWidth: 120 }}
     >
       <option value="ToDo">ToDo</option>

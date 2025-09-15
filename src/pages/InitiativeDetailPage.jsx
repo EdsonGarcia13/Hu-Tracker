@@ -9,40 +9,42 @@ export default function InitiativeDetailPage() {
   if (!initiative) return <p>Iniciativa no encontrada</p>;
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">📊 {initiative.name}</h2>
-      <div className="bg-slate-800 rounded-lg shadow p-4">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left">
-            <thead className="bg-slate-700 text-slate-300">
-              <tr>
-                <th className="px-2 py-1">Title</th>
-                <th className="px-2 py-1">Status</th>
-                <th className="px-2 py-1">Original Estimate</th>
-                <th className="px-2 py-1">Completed</th>
-                <th className="px-2 py-1">Remaining</th>
-                <th className="px-2 py-1">Start Date</th>
-                <th className="px-2 py-1">Due Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {initiative.stories.map((hu) => (
-                <tr key={hu.id} className="odd:bg-slate-800 even:bg-slate-900">
-                  <td className="px-2 py-1">{hu.Title}</td>
-                  <td className="px-2 py-1">{hu.State}</td>
-                  <td className="px-2 py-1">{hu["Original Estimate"]}</td>
-                  <td className="px-2 py-1">{hu["Completed Work"]}</td>
-                  <td className="px-2 py-1">{hu["Remaining Work"]}</td>
-                  <td className="px-2 py-1">{hu["Start Date"]}</td>
-                  <td className="px-2 py-1">{hu["Due Date"]}</td>
+    <div className="container-fluid py-4">
+      <h2 className="mb-4">📊 {initiative.name}</h2>
+      <div className="card bg-dark text-light">
+        <div className="card-body">
+          <div className="table-responsive">
+            <table className="table table-dark table-striped table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Original Estimate</th>
+                  <th>Completed</th>
+                  <th>Remaining</th>
+                  <th>Start Date</th>
+                  <th>Due Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {initiative.stories.map((hu) => (
+                  <tr key={hu.id}>
+                    <td>{hu.Title}</td>
+                    <td>{hu.State}</td>
+                    <td>{hu["Original Estimate"]}</td>
+                    <td>{hu["Completed Work"]}</td>
+                    <td>{hu["Remaining Work"]}</td>
+                    <td>{hu["Start Date"]}</td>
+                    <td>{hu["Due Date"]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Link to="/initiatives-overview" className="btn btn-outline-secondary mt-4">
+            Volver
+          </Link>
         </div>
-        <Link to="/initiatives-overview" className="btn btn-outline mt-4 inline-block">
-          Volver
-        </Link>
       </div>
     </div>
   );
