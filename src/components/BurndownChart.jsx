@@ -39,12 +39,11 @@ export default function BurndownChart({ burndownData, initiative }) {
   if (data.length === 0) return null;
 
   return (
-    <div className="card shadow-sm mt-4">
-      <div className="card-body">
-        <h5 className="card-title mb-3">
-          Avance por HU — {initiative || "General"}
-        </h5>
-        <ResponsiveContainer width="100%" height={420}>
+    <div className="bg-slate-800 rounded-lg shadow p-4 mt-6">
+      <h5 className="text-lg font-semibold mb-4">
+        Avance por HU — {initiative || "General"}
+      </h5>
+      <ResponsiveContainer width="100%" height={420}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="Title" />
@@ -116,8 +115,7 @@ export default function BurndownChart({ burndownData, initiative }) {
               name="Capacidad planeada (días)"
             />
           </BarChart>
-        </ResponsiveContainer>
-      </div>
+      </ResponsiveContainer>
     </div>
   );
 }
