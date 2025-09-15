@@ -26,16 +26,31 @@
   margin: 0 auto;
 }
 
-.contacts-content-row {
-  align-items: stretch;
+.contacts-content {
+  display: grid;
+  gap: 2.5rem;
 }
 
-.contacts-column {
+.contacts-panel {
   display: flex;
+  align-items: stretch;
+  min-width: 0;
 }
 
-.contacts-column .card {
+.contacts-panel .card {
   width: 100%;
+}
+
+@media (min-width: 992px) {
+  .contacts-content {
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .contacts-content {
+    gap: 2rem;
+  }
 }
 
 .contacts-page .card {
@@ -273,5 +288,29 @@
   .contacts-actions .btn {
     width: 48%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .contacts-content {
+    gap: 1.5rem;
+  }
+
+  .contacts-page .card-body {
+    padding: 1.5rem;
+  }
+
+  .contacts-table thead th,
+  .contacts-table tbody td {
+    font-size: 0.875rem;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .contacts-actions {
+    gap: 0.5rem;
+  }
+
+  .contacts-actions .btn {
+    width: 100%;
   }
 }

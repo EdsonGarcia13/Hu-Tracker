@@ -332,8 +332,11 @@ export default function ContactsPage() {
           </p>
         </div>
 
-        <div className="row g-4 contacts-content-row">
-          <div className="col-12 col-xl-5 contacts-column">
+        <div className="contacts-content">
+          <section
+            className="contacts-panel contacts-panel--form"
+            aria-label="Formulario para agregar o editar contactos"
+          >
             <ContactForm
               formData={formData}
               isEditing={isEditing}
@@ -341,14 +344,17 @@ export default function ContactsPage() {
               onSubmit={handleSubmit}
               onCancel={resetForm}
             />
-          </div>
-          <div className="col-12 col-xl-7 contacts-column">
+          </section>
+          <section
+            className="contacts-panel contacts-panel--list"
+            aria-label="Listado de contactos registrados"
+          >
             <ContactsTable
               contacts={contacts}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
-          </div>
+          </section>
         </div>
       </div>
     </div>
