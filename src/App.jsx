@@ -14,24 +14,27 @@ export default function App() {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="bg-dark text-light min-vh-100">
       {/* Top navbar */}
-      <nav className="fixed top-0 inset-x-0 bg-slate-800 shadow z-10">
-        <div className="px-4 py-3 flex items-center">
+      <nav className="navbar navbar-dark bg-dark shadow fixed-top">
+        <div className="container-fluid">
           {isAuthenticated && (
             <button
-              className="btn btn-outline md:hidden mr-2"
+              className="btn btn-outline-secondary d-md-none me-2"
               onClick={toggleSidebar}
             >
               ☰
             </button>
           )}
-          <Link to="/" className="font-semibold text-lg">
+          <Link to="/" className="navbar-brand fw-semibold">
             HU Tracker
           </Link>
-          <div className="ml-auto">
+          <div className="ms-auto">
             {isAuthenticated ? (
-              <button className="btn btn-outline" onClick={handleLogout}>
+              <button
+                className="btn btn-outline-secondary"
+                onClick={handleLogout}
+              >
                 Logout
               </button>
             ) : (
@@ -46,16 +49,15 @@ export default function App() {
       {/* Sidebar */}
       {isAuthenticated && (
         <aside
-          className={`fixed inset-y-0 left-0 w-56 bg-slate-800 p-4 transform transition-transform md:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:static md:block`}
+          className={`sidebar ${sidebarOpen ? "" : "d-none"} d-md-block bg-dark`}
         >
-          <nav className="space-y-2">
+          <nav className="nav flex-column">
             <Link
               to="/"
-              className={`block rounded px-3 py-2 hover:bg-slate-700 ${
-                location.pathname === "/" ? "bg-slate-700" : ""
+              className={`nav-link text-light ${
+                location.pathname === "/" ? "active" : ""
               }`}
+              onClick={() => setSidebarOpen(false)}
             >
               Iniciativas
             </Link>
@@ -64,7 +66,7 @@ export default function App() {
       )}
 
       {/* Main content */}
-      <main className={`pt-16 p-4 ${isAuthenticated ? "md:ml-56" : ""}`}>
+      <main className="main-content">
         <Outlet />
       </main>
     </div>

@@ -1,46 +1,26 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+body {
+  font-family: "Inter", sans-serif;
+}
 
-@layer base {
-  body {
-    @apply bg-slate-900 text-slate-100 font-sans;
-    font-family: "Inter", sans-serif;
+.sidebar {
+  position: fixed;
+  top: 56px;
+  bottom: 0;
+  left: 0;
+  width: 14rem;
+  background-color: #212529;
+  color: #f8f9fa;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.main-content {
+  margin-top: 56px;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    margin-left: 14rem;
   }
-}
-
-/* Reusable button styles */
-.btn {
-  @apply inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors focus:outline-none;
-}
-.btn-primary {
-  @apply bg-blue-500 hover:bg-blue-600 text-white;
-}
-.btn-danger {
-  @apply bg-red-600 hover:bg-red-700 text-white;
-}
-.btn-outline {
-  @apply border border-slate-500 text-slate-300 hover:bg-slate-700;
-}
-
-/* Badges */
-.badge-status-delay {
-  @apply bg-red-500 text-white text-xs px-2 py-0.5 rounded;
-}
-.badge-status-ontime {
-  @apply bg-green-500 text-white text-xs px-2 py-0.5 rounded;
-}
-.badge-hours {
-  @apply bg-blue-500 text-white text-xs px-2 py-0.5 rounded;
-}
-
-/* Progress bars */
-.progress-container {
-  @apply w-full bg-slate-700 rounded h-2;
-}
-.progress-completed {
-  @apply bg-green-500 h-2 rounded;
-}
-.progress-debt {
-  @apply bg-red-500 h-2 rounded;
 }
