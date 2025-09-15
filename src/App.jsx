@@ -55,11 +55,23 @@ export default function App() {
             <Link
               to="/"
               className={`nav-link text-dark ${
-                location.pathname === "/" ? "active" : ""
+                location.pathname === "/" ||
+                location.pathname.startsWith("/initiatives")
+                  ? "active"
+                  : ""
               }`}
               onClick={() => setSidebarOpen(false)}
             >
               Iniciativas
+            </Link>
+            <Link
+              to="/contacts"
+              className={`nav-link text-dark ${
+                location.pathname.startsWith("/contacts") ? "active" : ""
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Contactos
             </Link>
           </nav>
         </aside>
