@@ -24,3 +24,19 @@ body {
     margin-left: 14rem;
   }
 }
+
+.table-column-separator th,
+.table-column-separator td {
+  border-right: 1px solid #dee2e6;
+}
+
+.table-column-separator th:last-child,
+.table-column-separator td:last-child {
+  border-right: none;
+}
+
+.percent-label {
+  display: inline-block;
+  width: 5ch;
+  text-align: right;
+}

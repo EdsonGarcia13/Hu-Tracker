@@ -53,7 +53,7 @@ export default function HUTable({
         </div>
 
         <div className="table-responsive">
-          <table className="table table-striped table-sm align-middle">
+          <table className="table table-striped table-sm align-middle table-column-separator">
             <thead>
               <tr>
                 <th style={{ minWidth: "200px" }}>Title</th>
