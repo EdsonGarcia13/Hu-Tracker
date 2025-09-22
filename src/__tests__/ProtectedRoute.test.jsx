@@ -6,10 +6,17 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import authReducer from '../store/authSlice';
 import ProtectedRoute from '../components/ProtectedRoute';
 
-function renderWithAuth(isAuthenticated) {
+function renderWithAuth({ isAuthenticated, status = 'ready' }) {
   const store = configureStore({
     reducer: { auth: authReducer },
-    preloadedState: { auth: { isAuthenticated } },
+    preloadedState: {
+      auth: {
+        user: isAuthenticated ? { id: '1' } : null,
+        isAuthenticated,
+        status,
+        error: null,
+      },
+    },
   });
   return render(
     <Provider store={store}>
@@ -27,12 +34,17 @@ function renderWithAuth(isAuthenticated) {
 
 describe('ProtectedRoute', () => {
   test('renders child when authenticated', () => {
-    renderWithAuth(true);
+    renderWithAuth({ isAuthenticated: true });
     expect(screen.getByText('protected content')).toBeInTheDocument();
   });
 
   test('redirects to login when not authenticated', () => {
-    renderWithAuth(false);
+    renderWithAuth({ isAuthenticated: false });
     expect(screen.getByText('login page')).toBeInTheDocument();
+  });
+
+  test('shows loading message while checking session', () => {
+    renderWithAuth({ isAuthenticated: false, status: 'checking' });
+    expect(screen.getByText('Verificando sesión...')).toBeInTheDocument();
   });
 });

@@ -8,21 +8,53 @@ const initialState = {
 };
 
 const normalizeRow = (raw) => {
-  const original = Number(raw["Original Estimate"]) || 0;
-  const completed = Number(raw["Completed Work"]) || 0;
-  return {
-    Title: raw.Title || "",
-    State: raw.State || "ToDo",
-    "Assigned To": raw["Assigned To"] || "",
+  const original =
+    Number(
+      raw["Original Estimate"] ??
+        raw.originalEstimate ??
+        raw.original_estimate ??
+        0
+    ) || 0;
+  const completed =
+    Number(
+      raw["Completed Work"] ??
+        raw.completedWork ??
+        raw.completed_work ??
+        0
+    ) || 0;
+
+  const sprintValue =
+    raw.Sprint !== undefined && raw.Sprint !== null
+      ? raw.Sprint
+      : raw.sprint !== undefined && raw.sprint !== null
+      ? raw.sprint
+      : "";
+
+  const normalized = {
+    id: raw.id ?? raw.ID ?? null,
+    initiativeId:
+      raw.initiativeId ?? raw.initiative_id ?? raw.InitiativeId ?? null,
+    Title: raw.Title ?? raw.title ?? "",
+    State: raw.State ?? raw.state ?? "ToDo",
+    "Assigned To":
+      raw["Assigned To"] ?? raw.assignedTo ?? raw.assigned_to ?? "",
     "Original Estimate": original,
     "Completed Work": completed,
     "Remaining Work": Math.max(0, original - completed),
-    "Start Date": raw["Start Date"] || "",
-    "Due Date": raw["Due Date"] || "",
-    Initiative: raw.Initiative || "General",
-    Sprint: raw.Sprint || "",
-    isAdditional: raw.isAdditional || false,
+    "Start Date":
+      raw["Start Date"] ?? raw.startDate ?? raw.start_date ?? "",
+    "Due Date": raw["Due Date"] ?? raw.dueDate ?? raw.due_date ?? "",
+    Initiative: raw.Initiative ?? raw.initiative ?? "General",
+    Sprint: sprintValue !== "" ? String(sprintValue) : "",
+    isAdditional: raw.isAdditional ?? raw.is_additional ?? false,
   };
+
+  if (raw["Completion Date"] || raw.completionDate || raw.completion_date) {
+    normalized["Completion Date"] =
+      raw["Completion Date"] ?? raw.completionDate ?? raw.completion_date;
+  }
+
+  return normalized;
 };
 
 export const huSlice = createSlice({
@@ -30,15 +62,12 @@ export const huSlice = createSlice({
   initialState,
   reducers: {
     setInitiatives: (state, { payload }) => {
-      // payload: array completo de iniciativas (reemplaza)
       state.initiatives = payload;
     },
     addInitiative: (state, { payload }) => {
-      // payload: { id, name, startDate, dueDate, stories: [] }
       state.initiatives.push(payload);
     },
     editInitiative: (state, { payload }) => {
-      // { id, key, value }
       const { id, key, value } = payload;
       const idx = state.initiatives.findIndex((i) => i.id === id);
       if (idx !== -1)
@@ -46,17 +75,13 @@ export const huSlice = createSlice({
           key === "sprintDays" ? Number(value) : value;
     },
     removeInitiativeById: (state, { payload }) => {
-      // payload: id de la iniciativa
       state.initiatives = state.initiatives.filter((i) => i.id !== payload);
-      // (Opcional) limpiar HUs relacionadas si alguna vez guardas InitiativeId en items
-      // state.items = state.items.filter(hu => hu.InitiativeId !== payload);
     },
 
     loadFromExcel: (state, { payload }) => {
       state.items = payload.map(normalizeRow);
       const list = [...new Set(state.items.map((r) => r.Initiative || "General"))];
       state.selectedInitiative = list[0] || "";
-      // NOTA: las iniciativas (catálogo) se manejan en otro lado
     },
     addHU: (state, { payload }) => {
       const normalized = normalizeRow({ ...payload, "Completed Work": 0 });

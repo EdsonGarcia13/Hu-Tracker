@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import * as XLSX from "xlsx";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -12,18 +12,19 @@ import HUForm from "../components/HUForm";
 import HUTable from "../components/HUTable";
 import BurndownChart from "../components/BurndownChart";
 import SprintBurndownChart from "../components/SprintBurndownChart";
-import {
-  WORK_HOURS_PER_DAY,
-  calculateElapsedAndDelay,
-  businessDaysBetween,
-} from "../utils/timeCalculations";
+import { calculateElapsedAndDelay, businessDaysBetween } from "../utils/timeCalculations";
 import { useParams, Link } from "react-router-dom";
-import { initiativesMock } from "../mocks/initiativesMock";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import {
+  mapSupabaseHuToUi,
+  mapSupabaseInitiativeToUi,
+} from "../utils/supabaseMappers";
 
 export default function HUTrackerPage() {
-  const { id } = useParams(); // initiative id
+  const { id } = useParams();
   const dispatch = useDispatch();
   const { items, selectedInitiative, initiatives } = useSelector((s) => s.hu);
+  const { user } = useSelector((s) => s.auth);
 
   const [newHU, setNewHU] = useState({
     Title: "",
@@ -40,59 +41,69 @@ export default function HUTrackerPage() {
   });
 
   const [selectedSprint, setSelectedSprint] = useState("General");
+  const [initiativeFromDb, setInitiativeFromDb] = useState(null);
+  const [husRecords, setHusRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState("");
 
-  // hydrate from mock initiative
+  const canQuery = Boolean(supabase && isSupabaseConfigured && user?.id && id);
+
+  const fetchInitiative = useCallback(async () => {
+    if (!canQuery) {
+      dispatch(loadFromExcel([]));
+      dispatch(setSelectedInitiative(""));
+      setInitiativeFromDb(null);
+      setHusRecords([]);
+      return;
+    }
+
+    setLoading(true);
+    setRemoteError("");
+    const { data, error } = await supabase
+      .from("initiatives")
+      .select(
+        "id, name, start_date, due_date, sprint_days, hus(id, initiative_id, title, state, assigned_to, original_estimate, completed_work, remaining_work, start_date, due_date, sprint, is_additional, completion_date))"
+      )
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      setRemoteError(error.message);
+      dispatch(loadFromExcel([]));
+      dispatch(setSelectedInitiative(""));
+      setInitiativeFromDb(null);
+      setHusRecords([]);
+      setLoading(false);
+      return;
+    }
+
+    const mappedInitiative = mapSupabaseInitiativeToUi(data);
+    setInitiativeFromDb(mappedInitiative);
+    setHusRecords(data.hus || []);
+    dispatch(loadFromExcel(mappedInitiative.stories));
+    dispatch(setSelectedInitiative(mappedInitiative.name));
+    setNewHU((prev) => ({ ...prev, Initiative: mappedInitiative.name }));
+    setSelectedSprint("General");
+    setLoading(false);
+  }, [canQuery, dispatch, id, user?.id]);
+
   useEffect(() => {
-    const ini = initiativesMock.find((x) => x.id === id);
-    if (!ini) return;
-    const rowsFromMock = ini.stories.map((s) => ({
-      ...s,
-      Initiative: ini.name,
-      Sprint: s.Sprint != null || s.sprint != null ? String(s.Sprint ?? s.sprint) : "",
-    }));
-    dispatch(loadFromExcel(rowsFromMock));
-    dispatch(setSelectedInitiative(ini.name));
-    setNewHU((prev) => ({ ...prev, Initiative: ini.name }));
-  }, [id, dispatch]);
+    fetchInitiative();
+  }, [fetchInitiative]);
 
-  // upload excel
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file || !selectedInitiative) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: "binary" });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const parsedData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+  const currentInitiative = useMemo(() => {
+    const byId = initiatives.find((i) => i.id === id);
+    if (byId) return byId;
+    const byName = initiatives.find((i) => i.name === selectedInitiative);
+    return byName || initiativeFromDb;
+  }, [initiatives, selectedInitiative, initiativeFromDb, id]);
 
-      const headers = parsedData[0] || [];
-      const rows = parsedData.slice(1).map((row) => {
-        const obj = {};
-        headers.forEach((h, i) => (obj[h] = row[i]));
-        if (!obj.Initiative) obj.Initiative = selectedInitiative;
-        if (!obj.Sprint) obj.Sprint = "";
-        return obj;
-      });
-
-      dispatch(loadFromExcel(rows));
-      dispatch(setSelectedInitiative(selectedInitiative));
-    };
-    reader.readAsBinaryString(file);
-  };
-
-  // filter by initiative
   const filtered = useMemo(() => {
     return selectedInitiative
       ? items.filter((r) => r.Initiative === selectedInitiative)
       : items;
   }, [items, selectedInitiative]);
-
-  const currentInitiative = useMemo(
-    () => initiatives.find((i) => i.name === selectedInitiative),
-    [initiatives, selectedInitiative]
-  );
 
   const totalPlannedSprints = useMemo(() => {
     if (
@@ -109,7 +120,6 @@ export default function HUTrackerPage() {
     return 0;
   }, [currentInitiative]);
 
-  // filter by sprint
   const availableSprints = useMemo(() => {
     const all = filtered.map((hu) => String(hu.Sprint)).filter(Boolean);
     for (let i = 1; i <= totalPlannedSprints; i++) {
@@ -132,8 +142,6 @@ export default function HUTrackerPage() {
     return todayStr;
   }, [currentInitiative, todayStr]);
   const maxEndDate = currentInitiative?.dueDate || "";
-
-  // build burndown dataset
 
   const burndownDataFor = (rows) =>
     rows.map((row) => {
@@ -172,20 +180,28 @@ export default function HUTrackerPage() {
     [sprintFiltered]
   );
 
-  // actions
-  const onAddHU = () => {
+  const onAddHU = async () => {
     if (!newHU.Title || !newHU.State) return;
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible agregar historias sin conexión con Supabase."
+      );
+      return;
+    }
+
     if (currentInitiative) {
       const sprintNum = Number(newHU.Sprint);
       if (
-        sprintNum < 1 ||
-        (totalPlannedSprints && sprintNum > totalPlannedSprints)
+        newHU.Sprint &&
+        (sprintNum < 1 || (totalPlannedSprints && sprintNum > totalPlannedSprints))
       ) {
         alert("Sprint fuera de rango");
         return;
       }
       if (newHU["Start Date"] && newHU["Start Date"] < minStartDate) {
-        alert("La fecha de inicio no puede ser anterior al inicio de la iniciativa ni al día de hoy");
+        alert(
+          "La fecha de inicio no puede ser anterior al inicio de la iniciativa ni al día de hoy"
+        );
         return;
       }
       if (newHU["Due Date"] && newHU["Start Date"] && newHU["Due Date"] < newHU["Start Date"]) {
@@ -193,6 +209,7 @@ export default function HUTrackerPage() {
         return;
       }
     }
+
     let isAdditional = false;
     if (newHU["Due Date"] && maxEndDate && newHU["Due Date"] > maxEndDate) {
       const confirmExtra = window.confirm(
@@ -201,13 +218,39 @@ export default function HUTrackerPage() {
       if (!confirmExtra) return;
       isAdditional = true;
     }
-    const toAdd = {
-      ...newHU,
-      Initiative: selectedInitiative || newHU.Initiative,
-      Sprint: newHU.Sprint ? String(newHU.Sprint) : "",
-      isAdditional,
+
+    const payload = {
+      initiative_id: id,
+      title: newHU.Title.trim(),
+      state: newHU.State,
+      assigned_to: newHU["Assigned To"] || null,
+      original_estimate: Number(newHU["Original Estimate"]) || 0,
+      completed_work: 0,
+      start_date: newHU["Start Date"] || null,
+      due_date: newHU["Due Date"] || null,
+      sprint: newHU.Sprint ? Number(newHU.Sprint) : null,
+      is_additional: isAdditional,
     };
-    dispatch(addHU(toAdd));
+
+    const { data, error } = await supabase
+      .from("hus")
+      .insert(payload)
+      .select(
+        "id, initiative_id, title, state, assigned_to, original_estimate, completed_work, remaining_work, start_date, due_date, sprint, is_additional, completion_date"
+      )
+      .single();
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    const initiativeName =
+      selectedInitiative || initiativeFromDb?.name || currentInitiative?.name || "";
+    const mapped = mapSupabaseHuToUi(data, initiativeName);
+    setHusRecords((prev) => [...prev, data]);
+    dispatch(addHU(mapped));
+    setRemoteError("");
     setNewHU({
       Title: "",
       State: "ToDo",
@@ -217,13 +260,20 @@ export default function HUTrackerPage() {
       "Remaining Work": "",
       "Start Date": "",
       "Due Date": "",
-      Initiative: selectedInitiative || "",
+      Initiative: initiativeName,
       Sprint: "",
       isAdditional: false,
     });
   };
 
-  const onEditHU = (index, key, value) => {
+  const onEditHU = async (index, key, value) => {
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible actualizar historias sin conexión con Supabase."
+      );
+      return;
+    }
+
     if (currentInitiative) {
       if (key === "Sprint") {
         const num = Number(value);
@@ -235,16 +285,142 @@ export default function HUTrackerPage() {
       if (key === "Due Date") {
         const startVal = items[index]["Start Date"] || minStartDate;
         if (value < startVal) return;
-        const isAdditional = maxEndDate && value > maxEndDate;
-        dispatch(editHU({ index, key: "Due Date", value }));
-        dispatch(editHU({ index, key: "isAdditional", value: isAdditional }));
-        return;
       }
     }
+
+    const record = husRecords[index];
+    if (!record) return;
+
+    const updates = {};
+    let dispatchValue = value;
+
+    if (key === "Title") updates.title = value;
+    if (key === "State") updates.state = value;
+    if (key === "Assigned To") updates.assigned_to = value || null;
+    if (key === "Original Estimate") {
+      updates.original_estimate = Number(value) || 0;
+      dispatchValue = updates.original_estimate;
+    }
+    if (key === "Completed Work") {
+      updates.completed_work = Number(value) || 0;
+      dispatchValue = updates.completed_work;
+    }
+    if (key === "Sprint") {
+      updates.sprint = value ? Number(value) : null;
+    }
+    if (key === "Start Date") updates.start_date = value || null;
+    if (key === "Due Date") {
+      updates.due_date = value || null;
+      updates.is_additional = maxEndDate && value > maxEndDate;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      dispatch(editHU({ index, key, value }));
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("hus")
+      .update(updates)
+      .eq("id", record.id)
+      .eq("initiative_id", id)
+      .select(
+        "id, initiative_id, title, state, assigned_to, original_estimate, completed_work, remaining_work, start_date, due_date, sprint, is_additional, completion_date"
+      )
+      .single();
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    setRemoteError("");
+    setHusRecords((prev) => {
+      const next = [...prev];
+      next[index] = data;
+      return next;
+    });
+
+    if (key === "Due Date") {
+      dispatch(editHU({ index, key: "Due Date", value }));
+      dispatch(editHU({ index, key: "isAdditional", value: data.is_additional }));
+      return;
+    }
+
+    if (key === "Sprint") {
+      dispatch(
+        editHU({
+          index,
+          key: "Sprint",
+          value:
+            data.sprint !== null && data.sprint !== undefined
+              ? String(data.sprint)
+              : "",
+        })
+      );
+      return;
+    }
+
+    if (key === "Original Estimate" || key === "Completed Work") {
+      dispatch(editHU({ index, key, value: dispatchValue }));
+      return;
+    }
+
     dispatch(editHU({ index, key, value }));
   };
 
-  const onDeleteHU = (index) => dispatch(removeHU(index));
+  const onDeleteHU = async (index) => {
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible eliminar historias sin conexión con Supabase."
+      );
+      return;
+    }
+
+    const record = husRecords[index];
+    if (!record) return;
+
+    const { error } = await supabase
+      .from("hus")
+      .delete()
+      .eq("id", record.id)
+      .eq("initiative_id", id);
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    setRemoteError("");
+    setHusRecords((prev) => prev.filter((_, i) => i !== index));
+    dispatch(removeHU(index));
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file || !selectedInitiative) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const bstr = evt.target.result;
+      const wb = XLSX.read(bstr, { type: "binary" });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const parsedData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      const headers = parsedData[0] || [];
+      const rows = parsedData.slice(1).map((row) => {
+        const obj = {};
+        headers.forEach((h, i) => (obj[h] = row[i]));
+        if (!obj.Initiative) obj.Initiative = selectedInitiative;
+        if (!obj.Sprint) obj.Sprint = "";
+        return obj;
+      });
+
+      dispatch(loadFromExcel(rows));
+      dispatch(setSelectedInitiative(selectedInitiative));
+    };
+    reader.readAsBinaryString(file);
+  };
 
   return (
     <div className="container-fluid py-4">
@@ -260,7 +436,17 @@ export default function HUTrackerPage() {
         </nav>
       </div>
 
-      {/* Upload Excel */}
+      {remoteError && (
+        <div className="alert alert-danger" role="alert">
+          {remoteError}
+        </div>
+      )}
+      {loading && (
+        <div className="alert alert-info" role="status">
+          Cargando historias...
+        </div>
+      )}
+
       <div className="mb-4">
         <label className="form-label">
           Cargar Excel (se asigna a: {selectedInitiative || "—"})
@@ -273,7 +459,6 @@ export default function HUTrackerPage() {
         />
       </div>
 
-      {/* Formulario HU */}
       <HUForm
         newHU={newHU}
         setNewHU={setNewHU}
@@ -283,7 +468,6 @@ export default function HUTrackerPage() {
         sprintLimit={totalPlannedSprints}
       />
 
-      {/* Tabla HU */}
       <HUTable
         data={sprintFiltered}
         handleEdit={onEditHU}
@@ -296,14 +480,12 @@ export default function HUTrackerPage() {
         sprintLimit={totalPlannedSprints}
       />
 
-      {/* Sprint Burndown */}
       <SprintBurndownChart
         tasks={sprintFiltered}
         sprintDays={currentInitiative?.sprintDays}
         sprintName={selectedSprint}
       />
 
-      {/* Detalle por HU */}
       <BurndownChart
         burndownData={burndownData}
         initiative={selectedInitiative}

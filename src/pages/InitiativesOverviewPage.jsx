@@ -1,5 +1,5 @@
 // src/pages/InitiativesOverviewPage.jsx
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -8,27 +8,18 @@ import {
   removeInitiativeById,
   setInitiatives,
 } from "../store/huSlice";
-import { initiativesMock } from "../mocks/initiativesMock";
 import {
   businessDaysBetween,
   addBusinessDays,
   WORK_HOURS_PER_DAY,
 } from "../utils/timeCalculations";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import { mapSupabaseInitiativeToUi } from "../utils/supabaseMappers";
 
 export default function InitiativesOverviewPage() {
   const dispatch = useDispatch();
   const { initiatives } = useSelector((s) => s.hu);
-
-  // Hidratar SOLO una vez (evita duplicados por StrictMode)
-  const hydratedOnce = useRef(false);
-  useEffect(() => {
-    if (!hydratedOnce.current && initiatives.length === 0) {
-      dispatch(setInitiatives(initiativesMock));
-      hydratedOnce.current = true;
-    }
-  }, [dispatch, initiatives.length]);
-
-  // Form para nueva iniciativa
+  const { user } = useSelector((s) => s.auth);
   const [newIni, setNewIni] = useState({
     id: "",
     name: "",
@@ -36,6 +27,41 @@ export default function InitiativesOverviewPage() {
     dueDate: "",
     sprintDays: 10,
   });
+  const [loading, setLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState("");
+
+  const canQuery = Boolean(supabase && isSupabaseConfigured && user?.id);
+
+  const fetchInitiatives = useCallback(async () => {
+    if (!canQuery) {
+      dispatch(setInitiatives([]));
+      return;
+    }
+
+    setLoading(true);
+    setRemoteError("");
+    const { data, error } = await supabase
+      .from("initiatives")
+      .select(
+        "id, name, start_date, due_date, sprint_days, hus(id, initiative_id, title, state, assigned_to, original_estimate, completed_work, remaining_work, start_date, due_date, sprint, is_additional, completion_date))"
+      )
+      .eq("user_id", user.id)
+      .order("inserted_at", { ascending: true })
+      .order("inserted_at", { ascending: true, foreignTable: "hus" });
+
+    if (error) {
+      setRemoteError(error.message);
+      dispatch(setInitiatives([]));
+    } else {
+      const mapped = (data || []).map(mapSupabaseInitiativeToUi);
+      dispatch(setInitiatives(mapped));
+    }
+    setLoading(false);
+  }, [canQuery, dispatch, user?.id]);
+
+  useEffect(() => {
+    fetchInitiatives();
+  }, [fetchInitiatives]);
 
   const summary = useMemo(() => {
     return initiatives.map((ini) => {
@@ -123,7 +149,9 @@ export default function InitiativesOverviewPage() {
 
       const today = new Date();
       const hasDelay = stories.some((hu) => {
-        const huDue = new Date(hu["Due Date"]);
+        const dueValue = hu["Due Date"];
+        if (!dueValue) return false;
+        const huDue = new Date(dueValue);
         return (
           (hu["Completed Work"] || 0) < (hu["Original Estimate"] || 0) &&
           today > huDue
@@ -189,8 +217,15 @@ export default function InitiativesOverviewPage() {
     if (currentPage > totalPages) setCurrentPage(totalPages || 1);
   }, [totalPages, currentPage]);
 
-  const handleAddInitiative = () => {
-    if (!newIni.name) return;
+  const handleAddInitiative = async () => {
+    if (!newIni.name || !canQuery) {
+      if (!canQuery) {
+        setRemoteError(
+          "No es posible crear iniciativas sin conexión con Supabase o sin usuario autenticado."
+        );
+      }
+      return;
+    }
     const todayStr = new Date().toISOString().slice(0, 10);
     if (newIni.startDate && newIni.startDate < todayStr) {
       alert("La fecha de inicio no puede ser en el pasado");
@@ -200,13 +235,31 @@ export default function InitiativesOverviewPage() {
       alert("La fecha fin debe ser posterior al inicio");
       return;
     }
-    const iniToAdd = {
-      ...newIni,
-      id: `ini-${Date.now()}`,
-      stories: [],
-      sprintDays: Number(newIni.sprintDays) || 10,
+
+    const payload = {
+      user_id: user.id,
+      name: newIni.name.trim(),
+      start_date: newIni.startDate || null,
+      due_date: newIni.dueDate || null,
+      sprint_days: newIni.sprintDays ? Number(newIni.sprintDays) : null,
     };
-    dispatch(addInitiative(iniToAdd));
+
+    const { data, error } = await supabase
+      .from("initiatives")
+      .insert(payload)
+      .select(
+        "id, name, start_date, due_date, sprint_days, hus(id, initiative_id, title, state, assigned_to, original_estimate, completed_work, remaining_work, start_date, due_date, sprint, is_additional, completion_date))"
+      )
+      .single();
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    const mapped = mapSupabaseInitiativeToUi(data);
+    dispatch(addInitiative(mapped));
+    setRemoteError("");
     setNewIni({
       id: "",
       name: "",
@@ -216,19 +269,76 @@ export default function InitiativesOverviewPage() {
     });
   };
 
-  const handleEditById = (id, key, value) => {
+  const handleEditById = async (id, key, value) => {
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible actualizar iniciativas sin conexión con Supabase."
+      );
+      return;
+    }
+
+    const updates = {};
+    if (key === "name") updates.name = value;
+    if (key === "startDate") updates.start_date = value || null;
+    if (key === "dueDate") updates.due_date = value || null;
+    if (key === "sprintDays") updates.sprint_days = value ? Number(value) : null;
+
+    const { error } = await supabase
+      .from("initiatives")
+      .update(updates)
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    setRemoteError("");
     dispatch(editInitiative({ id, key, value }));
   };
 
-  const handleDeleteById = (id) => {
-    if (window.confirm("¿Seguro que deseas eliminar esta iniciativa?")) {
-      dispatch(removeInitiativeById(id));
+  const handleDeleteById = async (id) => {
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible eliminar iniciativas sin conexión con Supabase."
+      );
+      return;
     }
+
+    if (!window.confirm("¿Seguro que deseas eliminar esta iniciativa?")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("initiatives")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    setRemoteError("");
+    dispatch(removeInitiativeById(id));
   };
 
   return (
     <div className="container-fluid py-4">
       <h2 className="mb-4">📈 Resumen por Iniciativa</h2>
+
+      {remoteError && (
+        <div className="alert alert-danger" role="alert">
+          {remoteError}
+        </div>
+      )}
+      {loading && (
+        <div className="alert alert-info" role="status">
+          Cargando iniciativas...
+        </div>
+      )}
 
       {/* Formulario para nueva iniciativa */}
       <div className="card bg-white text-dark mb-4">
@@ -286,7 +396,11 @@ export default function InitiativesOverviewPage() {
               />
             </div>
             <div className="col-md d-flex align-items-end">
-              <button className="btn btn-primary w-100" onClick={handleAddInitiative}>
+              <button
+                className="btn btn-primary w-100"
+                onClick={handleAddInitiative}
+                disabled={!canQuery}
+              >
                 Agregar
               </button>
             </div>
@@ -395,7 +509,7 @@ export default function InitiativesOverviewPage() {
                     Estimado teórico: {row.totalSprints} sprints, {row.expectedPercentPerSprint}% por sprint
                   </div>
                   <div className="table-responsive">
-                      <table className="table table-striped table-sm align-middle table-column-separator">
+                    <table className="table table-striped table-sm align-middle table-column-separator">
                       <thead>
                         <tr>
                           <th>#</th>
@@ -458,7 +572,7 @@ export default function InitiativesOverviewPage() {
             </div>
           </div>
         ))}
-        {summary.length === 0 && (
+        {summary.length === 0 && !loading && (
           <div className="text-center text-muted">
             No hay iniciativas, agrega una arriba.
           </div>

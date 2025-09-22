@@ -1,16 +1,94 @@
 // src/App.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "./store/authSlice";
+import {
+  clearSession,
+  setAuthError,
+  setSession,
+  startAuthChecking,
+} from "./store/authSlice";
+import { supabase, isSupabaseConfigured } from "./lib/supabaseClient";
 
 export default function App() {
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector((s) => s.auth.isAuthenticated);
+  const { isAuthenticated, status, error, user } = useSelector((s) => s.auth);
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => dispatch(logout());
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!supabase || !isSupabaseConfigured) {
+      dispatch(clearSession());
+      if (!isSupabaseConfigured) {
+        dispatch(
+          setAuthError(
+            "Supabase no está configurado. Define VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para habilitar el backend."
+          )
+        );
+      }
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    dispatch(startAuthChecking());
+
+    supabase.auth
+      .getSession()
+      .then(({ data, error: sessionError }) => {
+        if (!isMounted) return;
+        if (sessionError) {
+          dispatch(setAuthError(sessionError.message));
+          dispatch(clearSession());
+          return;
+        }
+        if (data?.session?.user) {
+          dispatch(setSession(data.session.user));
+        } else {
+          dispatch(clearSession());
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        dispatch(setAuthError(err.message));
+        dispatch(clearSession());
+      });
+
+    const {
+      data: listener,
+      error: listenerError,
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+      if (session?.user) {
+        dispatch(setSession(session.user));
+      } else {
+        dispatch(clearSession());
+      }
+    });
+
+    if (listenerError) {
+      dispatch(setAuthError(listenerError.message));
+    }
+
+    return () => {
+      isMounted = false;
+      listener?.subscription?.unsubscribe();
+    };
+  }, [dispatch]);
+
+  const handleLogout = async () => {
+    if (supabase && isSupabaseConfigured) {
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        dispatch(setAuthError(signOutError.message));
+        return;
+      }
+    }
+    dispatch(clearSession());
+  };
+
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
@@ -29,12 +107,14 @@ export default function App() {
           <Link to="/" className="navbar-brand fw-semibold">
             HU Tracker
           </Link>
-          <div className="ms-auto">
+          <div className="ms-auto d-flex align-items-center gap-3">
+            {user?.email && (
+              <span className="text-muted small d-none d-md-inline">
+                {user.email}
+              </span>
+            )}
             {isAuthenticated ? (
-              <button
-                className="btn btn-outline-secondary"
-                onClick={handleLogout}
-              >
+              <button className="btn btn-outline-secondary" onClick={handleLogout}>
                 Logout
               </button>
             ) : (
@@ -79,6 +159,16 @@ export default function App() {
 
       {/* Main content */}
       <main className="main-content">
+        {status === "checking" && (
+          <div className="alert alert-info" role="status">
+            Verificando sesión...
+          </div>
+        )}
+        {error && (
+          <div className="alert alert-warning" role="alert">
+            {error}
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

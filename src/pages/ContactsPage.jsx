@@ -1,23 +1,8 @@
 // src/pages/ContactsPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useSelector } from "react-redux";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import "./ContactsPage.css";
-
-const initialContacts = [
-  {
-    name: "Ana López",
-    team: "Frontend",
-    role: "Technical Lead",
-    email: "ana.lopez@example.com",
-    cellphone: "5215551234567",
-  },
-  {
-    name: "Carlos Méndez",
-    team: "Backend",
-    role: "Team Lead",
-    email: "carlos.mendez@example.com",
-    cellphone: "5215559876543",
-  },
-];
 
 const defaultFormState = {
   name: "",
@@ -68,7 +53,14 @@ const normalizeText = (value) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
+function ContactForm({
+  formData,
+  isEditing,
+  onChange,
+  onSubmit,
+  onCancel,
+  disabled,
+}) {
   return (
     <div className="card shadow-sm">
       <div className="card-body">
@@ -89,6 +81,7 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
               onChange={onChange}
               placeholder="Ej. Ana López"
               required
+              disabled={disabled}
             />
           </div>
           <div className="col-md-6">
@@ -104,6 +97,7 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
               onChange={onChange}
               placeholder="Ej. Frontend"
               required
+              disabled={disabled}
             />
           </div>
           <div className="col-md-6">
@@ -119,6 +113,7 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
               onChange={onChange}
               placeholder="Ej. Team Lead"
               required
+              disabled={disabled}
             />
           </div>
           <div className="col-md-6">
@@ -134,6 +129,7 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
               onChange={onChange}
               placeholder="Ej. nombre@empresa.com"
               required
+              disabled={disabled}
             />
           </div>
           <div className="col-md-6">
@@ -149,6 +145,7 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
               onChange={onChange}
               placeholder="Ej. 5551234567"
               required
+              disabled={disabled}
             />
           </div>
           <div className="col-12 d-flex justify-content-end gap-2">
@@ -161,7 +158,7 @@ function ContactForm({ formData, isEditing, onChange, onSubmit, onCancel }) {
                 Cancelar
               </button>
             )}
-            <button type="submit" className="btn btn-save">
+            <button type="submit" className="btn btn-save" disabled={disabled}>
               {isEditing ? "Actualizar contacto" : "Guardar contacto"}
             </button>
           </div>
@@ -181,6 +178,7 @@ function ContactsTable({
   isFiltering,
   hasContacts,
   activeSearchTerm,
+  disabled,
 }) {
   return (
     <div className="card shadow-sm">
@@ -247,7 +245,7 @@ function ContactsTable({
                 </tr>
               ) : (
                 filteredContacts.map(({ contact, index: originalIndex }) => (
-                  <tr key={`${contact.email}-${originalIndex}`}>
+                  <tr key={contact.id || `${contact.email}-${originalIndex}`}>
                     <td className="fw-semibold">{contact.name}</td>
                     <td>
                       <span className="contacts-team-badge">
@@ -279,6 +277,7 @@ function ContactsTable({
                           type="button"
                           className="btn btn-edit"
                           onClick={() => onEdit(originalIndex)}
+                          disabled={disabled}
                         >
                           Editar
                         </button>
@@ -286,6 +285,7 @@ function ContactsTable({
                           type="button"
                           className="btn btn-delete"
                           onClick={() => onDelete(originalIndex)}
+                          disabled={disabled}
                         >
                           Eliminar
                         </button>
@@ -303,13 +303,43 @@ function ContactsTable({
 }
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState(initialContacts);
+  const { user } = useSelector((s) => s.auth);
+  const [contacts, setContacts] = useState([]);
   const [formData, setFormData] = useState(defaultFormState);
   const [editingIndex, setEditingIndex] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState("");
 
   const isEditing = editingIndex !== null;
+  const canQuery = Boolean(supabase && isSupabaseConfigured && user?.id);
+
+  const fetchContacts = useCallback(async () => {
+    if (!canQuery) {
+      setContacts([]);
+      return;
+    }
+    setLoading(true);
+    setRemoteError("");
+    const { data, error } = await supabase
+      .from("contacts")
+      .select("id, name, team, role, email, cellphone")
+      .eq("user_id", user.id)
+      .order("inserted_at", { ascending: true });
+
+    if (error) {
+      setRemoteError(error.message);
+      setContacts([]);
+    } else {
+      setContacts(data || []);
+    }
+    setLoading(false);
+  }, [canQuery, user?.id]);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -321,8 +351,15 @@ export default function ContactsPage() {
     setEditingIndex(null);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible guardar contactos sin conexión con Supabase."
+      );
+      return;
+    }
 
     const normalizedPhone = normalizePhone(formData.cellphone);
     if (!normalizedPhone) {
@@ -337,20 +374,49 @@ export default function ContactsPage() {
       cellphone: normalizedPhone,
     };
 
-    setContacts((prev) => {
-      if (editingIndex !== null) {
-        return prev.map((contact, index) =>
-          index === editingIndex ? payload : contact,
-        );
-      }
-      return [...prev, payload];
-    });
+    setRemoteError("");
 
+    if (editingIndex !== null) {
+      const contact = contacts[editingIndex];
+      if (!contact) return;
+      const { data, error } = await supabase
+        .from("contacts")
+        .update(payload)
+        .eq("id", contact.id)
+        .eq("user_id", user.id)
+        .select("id, name, team, role, email, cellphone")
+        .single();
+
+      if (error) {
+        setRemoteError(error.message);
+        return;
+      }
+
+      setContacts((prev) =>
+        prev.map((item, index) => (index === editingIndex ? data : item))
+      );
+      resetForm();
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("contacts")
+      .insert({ ...payload, user_id: user.id })
+      .select("id, name, team, role, email, cellphone")
+      .single();
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
+    setContacts((prev) => [...prev, data]);
     resetForm();
   };
 
   const handleEdit = (index) => {
     const contact = contacts[index];
+    if (!contact) return;
     setFormData({
       name: contact.name,
       team: contact.team,
@@ -361,7 +427,28 @@ export default function ContactsPage() {
     setEditingIndex(index);
   };
 
-  const handleDelete = (index) => {
+  const handleDelete = async (index) => {
+    if (!canQuery) {
+      setRemoteError(
+        "No es posible eliminar contactos sin conexión con Supabase."
+      );
+      return;
+    }
+
+    const contact = contacts[index];
+    if (!contact) return;
+
+    const { error } = await supabase
+      .from("contacts")
+      .delete()
+      .eq("id", contact.id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      setRemoteError(error.message);
+      return;
+    }
+
     setContacts((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
 
     setEditingIndex((prevIndex) => {
@@ -369,7 +456,7 @@ export default function ContactsPage() {
         return prevIndex;
       }
       if (prevIndex === index) {
-        setFormData(defaultFormState);
+        resetForm();
         return null;
       }
       if (prevIndex > index) {
@@ -394,17 +481,17 @@ export default function ContactsPage() {
     setSearchQuery(trimmedQuery);
   };
 
-  const contactEntries = contacts.map((contact, index) => ({
-    contact,
-    index,
-  }));
+  const contactEntries = useMemo(
+    () => contacts.map((contact, index) => ({ contact, index })),
+    [contacts]
+  );
 
   const normalizedSearchTerm = normalizeText(searchTerm);
   const filteredContacts =
     normalizedSearchTerm === ""
       ? contactEntries
       : contactEntries.filter(({ contact }) =>
-          normalizeText(contact.name).includes(normalizedSearchTerm),
+          normalizeText(contact.name).includes(normalizedSearchTerm)
         );
   const isFiltering = normalizedSearchTerm !== "";
 
@@ -420,6 +507,17 @@ export default function ContactsPage() {
           </p>
         </div>
 
+        {remoteError && (
+          <div className="alert alert-danger" role="alert">
+            {remoteError}
+          </div>
+        )}
+        {loading && (
+          <div className="alert alert-info" role="status">
+            Cargando contactos...
+          </div>
+        )}
+
         <div className="contacts-content">
           <section
             className="contacts-panel contacts-panel--form"
@@ -431,6 +529,7 @@ export default function ContactsPage() {
               onChange={handleChange}
               onSubmit={handleSubmit}
               onCancel={resetForm}
+              disabled={!canQuery}
             />
           </section>
           <section
@@ -447,6 +546,7 @@ export default function ContactsPage() {
               isFiltering={isFiltering}
               hasContacts={hasContacts}
               activeSearchTerm={searchTerm}
+              disabled={!canQuery}
             />
           </section>
         </div>
