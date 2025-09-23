@@ -14,7 +14,7 @@ export default function App() {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   return (
-    <div className="bg-light text-dark min-vh-100">
+    <div className="app-background text-dark min-vh-100">
       {/* Top navbar */}
       <nav className="navbar navbar-light bg-white border-bottom shadow fixed-top">
         <div className="container-fluid">

@@ -2,6 +2,18 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+/* Modern gradient background for the entire application */
+.app-background {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+/* Alternative subtle gradient option */
+.app-background-subtle {
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  min-height: 100vh;
+}
+
 .sidebar {
   position: fixed;
   top: 56px;
@@ -17,6 +29,8 @@ body {
 .main-content {
   margin-top: 56px;
   padding: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0;
 }
 
 @media (min-width: 768px) {

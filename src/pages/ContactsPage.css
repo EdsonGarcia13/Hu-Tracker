@@ -1,5 +1,5 @@
 .contacts-page {
-  background: linear-gradient(180deg, #f5f7fb 0%, #edf1f7 100%);
+  background: transparent;
   min-height: calc(100vh - 56px);
   padding: 3rem 0 4rem;
 }
